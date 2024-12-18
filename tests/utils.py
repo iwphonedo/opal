@@ -74,8 +74,8 @@ def prepare_policy_repo(account_arg="-account=permitio"):
             delete_test_branches(OPAL_POLICY_REPO_URL)
         else:
             # Using GitHub API to fork the repository
-            OPAL_TARGET_PAT = os.getenv("pat", "")
-            headers = {"Authorization": f"token {OPAL_TARGET_PAT}"}
+            OPAL_TARGET_GITHUB__PAT = os.getenv("GITHUB_TOKEN", "")
+            headers = {"Authorization": f"token {OPAL_TARGET_GITHUB__PAT}"}
             response = requests.post(
                 f"https://api.github.com/repos/permitio/opal-example-policy-repo/forks",
                 headers=headers
@@ -145,8 +145,9 @@ def delete_test_branches(repo_path):
         from github import Github
 
         # Initialize Github API
-        g = Github(os.getenv('OPAL_POLICY_REPO_SSH_KEY'))
-
+        g = Github()
+        #OPAL_TARGET_GITHUB__PAT = os.getenv("GITHUB_TOKEN", "")
+        
         # Get the repository
         repo = g.get_repo(repo_path)    
 

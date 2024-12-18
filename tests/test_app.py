@@ -66,10 +66,7 @@ def data_publish(user):
     Tests data publishing for a given user.
     """
     print(f"- Testing data publish for user {user}")
-    
-    # Set the required environment variable
-    opal_client_token = "OPAL_DATA_SOURCE_TOKEN_VALUE"  # Replace with the actual token value
-    
+        
     # Run the `opal-client publish-data-update` command
     command = [
         "opal-client", 
@@ -79,7 +76,6 @@ def data_publish(user):
         "--dst-path", f"/users/{user}/location"
     ]
     env = os.environ.copy()
-    env["OPAL_CLIENT_TOKEN"] = opal_client_token
 
     result = subprocess.run(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     

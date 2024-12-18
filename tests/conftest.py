@@ -81,5 +81,6 @@ def setup(opal_server, opal_client):
     if s.OPAL_TESTS_DEBUG:
         debugpy.breakpoint()
         s.dump_settings()
+        
         input("Press enter to shutdown...")
         #time.sleep(3600)  # Giving us some time to inspect the containers
