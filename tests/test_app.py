@@ -89,9 +89,10 @@ def update_policy(
         "rbac.rego",
         (
             "package app.rbac\n"
-            "default allow = false\n\n"
+            "import rego.v1\n"
+            "default allow := false\n\n"
             "# Allow the action if the user is granted permission to perform the action.\n"
-            "allow {\n"
+            "allow if {\n"
             "\t# unless user location is outside US\n"
             "\tcountry := data.users[input.user].location.country\n"
             '\tcountry == "' + country_value + '"\n'
