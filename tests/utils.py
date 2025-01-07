@@ -159,7 +159,8 @@ async def opal_authorize(user: str, policy_url: str):
 
     allowed = False
     # Parse the JSON response
-    assert "result" in response.json()
+    response_json = response.json()
+    assert "result" in response_json, response_json
     allowed = response.json()["result"]
     logger.debug(
         f"Authorization test result: {user} is {'ALLOWED' if allowed else 'NOT ALLOWED'}."

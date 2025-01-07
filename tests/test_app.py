@@ -215,7 +215,7 @@ def test_read_statistics(
     time.sleep(15)
 
     for server in opal_servers:
-        print(f"OPAL Server: {server.settings.container_name}:{server.settings.port}")
+        print(f"OPAL Server: {server.settings.container_name}:7002")
 
         # The URL for statistics
         stats_url = f"http://localhost:{server.settings.port}/stats"

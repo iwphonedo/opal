@@ -151,10 +151,6 @@ class OpalServerSettings:
 
         self.__dict__.update(kwargs)
 
-        if container_index > 1:
-            self.port = self.port + container_index - 1
-            self.debug_port = self.debug_port + container_index - 1
-
         self.validate_dependencies()
 
     def validate_dependencies(self):
@@ -260,7 +256,7 @@ class OpalServerSettings:
         self.uvicorn_asgi_app = os.getenv(
             "OPAL_SERVER_UVICORN_ASGI_APP", "opal_server.main:app"
         )
-        self.uvicorn_port = self.port
+        self.uvicorn_port = os.getenv("OPAL_SERVER_UVICORN_PORT", "7002")
 
         if not self.private_key or not self.public_key:
             self.private_key, self.public_key = utils.generate_ssh_key_pair()

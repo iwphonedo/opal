@@ -279,7 +279,9 @@ class OpalClientSettings:
         self.auth_jwt_issuer = os.getenv("OPAL_AUTH_JWT_ISSUER", "https://opal.ac/")
         self.statistics_enabled = os.getenv("OPAL_STATISTICS_ENABLED", "true")
         self.debug_enabled = os.getenv("OPAL_DEBUG_ENABLED", True)
-        self.debug_port = os.getenv("CLIENT_DEBUG_PORT", 6678)
+        self.debug_port = os.getenv(
+            "CLIENT_DEBUG_PORT", utils.find_available_port(6678)
+        )
         self.policy_store_url = os.getenv("OPAL_POLICY_STORE_URL", None)
 
         self.policy_store_type = os.getenv("OPAL_POLICY_STORE_TYPE", "OPA")
