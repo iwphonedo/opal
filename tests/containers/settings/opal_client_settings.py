@@ -156,11 +156,6 @@ class OpalClientSettings:
             uvicorn_asgi_app if uvicorn_asgi_app else self.uvicorn_asgi_app
         )
 
-        if self.container_index > 1:
-            self.opa_port += self.container_index - 1
-            # self.port += self.container_index - 1
-            self.debug_port += self.container_index - 1
-
         self.iniline_cedar_enabled = (
             iniline_cedar_enabled
             if iniline_cedar_enabled
@@ -258,7 +253,7 @@ class OpalClientSettings:
         self.container_name = os.getenv("OPAL_CLIENT_CONTAINER_NAME", "opal_client")
         self.port = os.getenv("OPAL_CLIENT_PORT", utils.find_available_port(7000))
         self.opal_server_url = os.getenv("OPAL_SERVER_URL", "http://opal_server:7002")
-        self.opa_port = os.getenv("OPA_PORT", 8181)
+        self.opa_port = os.getenv("OPA_PORT", utils.find_available_port(8181))
         self.tests_debug = os.getenv("OPAL_TESTS_DEBUG", "true")
         self.log_diagnose = os.getenv("LOG_DIAGNOSE", "true")
         self.log_level = os.getenv("OPAL_LOG_LEVEL", "DEBUG")
