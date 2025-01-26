@@ -4,14 +4,16 @@ from testcontainers.core.network import Network
 
 import docker
 from tests.containers.permitContainer import PermitContainer
+from tests.containers.settings.kafka_broadcast_settings import KafkaBroadcastSettings
 
 
 class ZookeeperContainer(PermitContainer, DockerContainer):
     def __init__(
         self,
         network: Network,
+        settings: KafkaBroadcastSettings,
         docker_client_kw: dict | None = None,
-        **kwargs,
+        **kwargs: dict,
     ) -> None:
         # Add custom labels to the kwargs
         labels = kwargs.get("labels", {})
@@ -38,3 +40,5 @@ class ZookeeperContainer(PermitContainer, DockerContainer):
         self.with_network_aliases("zookeper")
         # Add a custom name for the container
         self.with_name(f"zookeeper")
+
+        self.start()

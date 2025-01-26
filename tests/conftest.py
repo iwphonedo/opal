@@ -86,7 +86,7 @@ def temp_dir():
     print(f"Temporary directory removed: {dir_path}")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def opal_network():
     """Creates a Docker network and yields it.
 
@@ -129,13 +129,13 @@ from tests.fixtures.policy_repos import gitea_server, gitea_settings, policy_rep
 @pytest.fixture(scope="session")
 def opal_servers(
     opal_network: Network,
-    broadcast_channel: BroadcastContainerBase,
+    #broadcast_channel: BroadcastContainerBase,
     policy_repo: PolicyRepoBase,
     number_of_opal_servers: int,
     opal_server_image: str,
     topics: dict[str, int],
-    # kafka_broadcast_channel: KafkaBroadcastContainer,
-    # redis_broadcast_channel: RedisBroadcastContainer,
+    kafka_broadcast_channel: KafkaBroadcastContainer,
+    #redis_broadcast_channel: RedisBroadcastContainer,
     session_matrix,
 ):
     """Fixture that initializes and manages OPAL server containers for testing.
@@ -162,10 +162,15 @@ def opal_servers(
         List[OpalServerContainer]: A list of running OPAL server containers.
     """
 
+    #broadcast_channel = redis_broadcast_channel
+    broadcast_channel = kafka_broadcast_channel
+    broadcast_channel = broadcast_channel[0]
+
     if not broadcast_channel:
         raise ValueError("Missing 'broadcast_channel' container.")
 
     containers = []  # List to store container instances
+
 
     for i in range(number_of_opal_servers):
         container_name = f"opal_server_{i+1}"

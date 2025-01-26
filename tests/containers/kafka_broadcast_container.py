@@ -2,8 +2,9 @@ import debugpy
 from testcontainers.core.network import Network
 from testcontainers.kafka import KafkaContainer
 
-import docker
-from tests.containers.permitContainer import PermitContainer
+from tests.containers.broadcast_container_base import BroadcastContainerBase
+from tests.containers.PermitContainer import PermitContainer
+from tests.containers.settings import kafka_broadcast_settings
 from tests.containers.zookeeper_container import ZookeeperContainer
 
 
@@ -12,6 +13,7 @@ class KafkaBroadcastContainer(PermitContainer, KafkaContainer):
         self,
         network: Network,
         zookeeper_container: ZookeeperContainer,
+        kafka_settings: kafka_broadcast_settings,
         docker_client_kw: dict | None = None,
         **kwargs,
     ) -> None:
@@ -19,6 +21,8 @@ class KafkaBroadcastContainer(PermitContainer, KafkaContainer):
         labels = kwargs.get("labels", {})
         labels.update({"com.docker.compose.project": "pytest"})
         kwargs["labels"] = labels
+
+        self.settings = kafka_settings
 
         self.zookeeper_container = zookeeper_container
         self.network = network
@@ -28,6 +32,12 @@ class KafkaBroadcastContainer(PermitContainer, KafkaContainer):
 
         self.with_network(self.network)
 
+        for key, value in self.settings.getKafkaEnvVars().items():
+            self.with_env(key, value)
+
         self.with_network_aliases("broadcast_channel")
+
         # Add a custom name for the container
-        self.with_name(f"kafka_broadcast_channel")
+        self.with_name(self.settings.kafka_container_name)
+
+        self.start()
