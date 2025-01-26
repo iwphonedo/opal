@@ -125,7 +125,7 @@ class PolicyWatcherTask(BasePolicyWatcherTask):
         """Triggers the policy watcher from outside to check for changes (git
         pull)"""
         try:
-            async with start_span("opal_server_policy_update") as span:            
+            async with start_span("opal_server_policy_update") as span:
                 if span is not None:
                     span.set_attribute("topic", str(topic))
                 await self._watcher.check_for_changes()
