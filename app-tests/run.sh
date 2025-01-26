@@ -44,12 +44,15 @@ function prepare_policy_repo {
   export OPAL_POLICY_REPO_URL
   export POLICY_REPO_BRANCH
 
-  OPAL_REPO_NAME="opal-test-policy-repo"  # for CI use opal-test-policy-repo
+  OPAL_REPO_NAME="opal-tests-policy-repo"  # for CI use opal-test-policy-repo
   OPAL_POLICY_REPO_URL=${OPAL_POLICY_REPO_URL:-git@github.com:permitio/${OPAL_REPO_NAME}.git}
 
   if [ -n "$GITHUB_ACTIONS" ]; then
+    echo "Running inside GitHub Actions CI"
     TARGET_FORK_REPO_URL="$OPAL_POLICY_REPO_URL"
   else
+    echo "Running outside GitHub Actions CI"
+    OPAL_REPO_NAME="opal-example-policy-repo"
     OPAL_TEST_TARGET_GITHUB_ACCOUNT=${OPAL_TEST_TARGET_GITHUB_ACCOUNT:-iwphonedo}
     TARGET_FORK_REPO_URL="https://github.com/${OPAL_TEST_TARGET_GITHUB_ACCOUNT}/${OPAL_REPO_NAME}.git"
   fi
