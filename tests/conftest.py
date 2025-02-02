@@ -8,35 +8,20 @@ from typing import List
 
 import debugpy
 import pytest
+from tests import utils
 from testcontainers.core.network import Network
 from testcontainers.core.utils import setup_logger
-from testcontainers.core.waiting_utils import wait_for_logs
-
-import docker
-from tests import utils
-from tests.containers.broadcast_container_base import BroadcastContainerBase
-from tests.containers.cedar_container import CedarContainer
-from tests.containers.gitea_container import GiteaContainer
-from tests.containers.kafka_broadcast_container import KafkaBroadcastContainer
-from tests.containers.opa_container import OpaContainer, OpaSettings
+from containers.broadcast_container_base import BroadcastContainerBase
 from tests.containers.opal_client_container import OpalClientContainer
-from tests.containers.opal_server_container import OpalServerContainer
-from tests.containers.postgres_broadcast_container import PostgresBroadcastContainer
-from tests.containers.redis_broadcast_container import RedisBroadcastContainer
-from tests.containers.settings.cedar_settings import CedarSettings
-from tests.containers.settings.gitea_settings import GiteaSettings
+from containers.opal_server_container import OpalServerContainer
+from containers.settings.opal_server_settings import OpalServerSettings
 from tests.containers.settings.opal_client_settings import OpalClientSettings
-from tests.containers.settings.opal_server_settings import OpalServerSettings
-from tests.containers.settings.postgres_broadcast_settings import (
-    PostgresBroadcastSettings,
-)
 from tests.policy_repos.policy_repo_base import PolicyRepoBase
-from tests.policy_repos.policy_repo_factory import (
-    PolicyRepoFactory,
-    SupportedPolicyRepo,
-)
-from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
 from tests.settings import pytest_settings
+from fixtures.broadcasters import (broadcast_channel, kafka_broadcast_channel, postgres_broadcast_channel, redis_broadcast_channel)
+from tests.fixtures.images import opal_server_image
+from tests.fixtures.policy_repos import gitea_server, gitea_settings, policy_repo
+
 
 logger = setup_logger(__name__)
 
@@ -54,6 +39,8 @@ def cancel_wait_for_client_after_timeout():
 
 try:
     if pytest_settings.wait_for_debugger:
+        print(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
+
         t = threading.Thread(target=cancel_wait_for_client_after_timeout)
         t.start()
         print(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
@@ -100,6 +87,7 @@ def opal_network():
     time.sleep(5)  # wait for the containers to stop
     network.remove()
     print("Network removed")
+    
 
 
 @pytest.fixture(scope="session")
@@ -116,16 +104,6 @@ def number_of_opal_servers():
     return 2
 
 
-from tests.fixtures.broadcasters import (
-    broadcast_channel,
-    kafka_broadcast_channel,
-    postgres_broadcast_channel,
-    redis_broadcast_channel,
-)
-from tests.fixtures.images import opal_server_image
-from tests.fixtures.policy_repos import gitea_server, gitea_settings, policy_repo
-
-
 @pytest.fixture(scope="session")
 def opal_servers(
     opal_network: Network,
@@ -134,9 +112,9 @@ def opal_servers(
     number_of_opal_servers: int,
     opal_server_image: str,
     topics: dict[str, int],
-    # kafka_broadcast_channel: KafkaBroadcastContainer,
-    # redis_broadcast_channel: RedisBroadcastContainer,
-    session_matrix,
+    # # kafka_broadcast_channel: KafkaBroadcastContainer,
+    # # redis_broadcast_channel: RedisBroadcastContainer,
+    # session_matrix,
 ):
     """Fixture that initializes and manages OPAL server containers for testing.
 
@@ -161,7 +139,6 @@ def opal_servers(
     Yields:
         List[OpalServerContainer]: A list of running OPAL server containers.
     """
-
     if not broadcast_channel:
         raise ValueError("Missing 'broadcast_channel' container.")
 
@@ -204,7 +181,7 @@ def opal_servers(
     yield containers
 
     for container in containers:
-        container.stop()
+       container.stop()
 
 
 @pytest.fixture(scope="session")
@@ -219,7 +196,7 @@ def number_of_opal_clients():
 
 
 @pytest.fixture(scope="session")
-def connected_clients(opal_clients: List[OpalClientContainer]):
+def connected_clients(opal_clients: List[OpalClientContainer]):#opal_clients: List[OpalClientContainer]):
     """A fixture that waits for all OPAL clients to connect to the PubSub
     server before yielding them.
 
@@ -243,7 +220,7 @@ def connected_clients(opal_clients: List[OpalClientContainer]):
             log_str="Connected to PubSub server", timeout=30
         ), f"Client {client.settings.container_name} did not connect to PubSub server."
     yield opal_clients
-
+    
 
 from tests.fixtures.images import (
     cedar_image,
@@ -251,19 +228,11 @@ from tests.fixtures.images import (
     opal_client_image,
     opal_client_with_opa_image,
 )
-from tests.fixtures.policy_stores import cedar_server, opa_server
+#from tests.fixtures.policy_stores import cedar_server, opa_server
 
 
 @pytest.fixture(scope="session")
-def opal_clients(
-    opal_network: Network,
-    opal_servers: List[OpalServerContainer],
-    # opa_server: OpaContainer,
-    # cedar_server: CedarContainer,
-    request,
-    number_of_opal_clients: int,
-    opal_client_with_opa_image,
-):
+def opal_clients(opal_network: Network, opal_servers: List[OpalServerContainer], number_of_opal_clients: int, opal_client_with_opa_image):
     """A fixture that starts and manages multiple OPAL client containers.
 
     This fixture takes a list of OPAL server containers as input and starts a
@@ -366,9 +335,7 @@ def topics():
 
 
 @pytest.fixture(scope="session")
-def topiced_clients(
-    topics, opal_network: Network, opal_servers: list[OpalServerContainer]
-):
+def topiced_clients(topics, opal_network: Network, opal_servers: list[OpalServerContainer]):
     """Fixture that starts and manages multiple OPAL client containers, each
     subscribing to a different topic.
 
@@ -475,6 +442,8 @@ def wait_sometime():
         input()  # Wait for key press
 
 
+from settings import session_matrix
+
 @pytest.fixture(scope="session", autouse=True)
 def setup(opal_clients, session_matrix):
     """A setup fixture that is run once per test session.
@@ -497,9 +466,11 @@ def setup(opal_clients, session_matrix):
     ------
     None
     """
+    logger.info("Setting up test session...")
+    print("Setting up test session...")
     yield
 
     if session_matrix["is_final"]:
         logger.info("Finalizing test session...")
-        utils.remove_env("OPAL_TESTS_DEBUG")
+        # utils.remove_env("OPAL_TESTS_DEBUG")
         wait_sometime()
