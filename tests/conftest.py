@@ -29,27 +29,27 @@ logger = setup_logger(__name__)
 debugger_wait_time = 5  # seconds
 
 
-def cancel_wait_for_client_after_timeout():
-    try:
-        time.sleep(debugger_wait_time)
-        debugpy.wait_for_client.cancel()
-    except Exception as e:
-        print(f"Failed to cancel wait for client: {e}")
+# def cancel_wait_for_client_after_timeout():
+#     try:
+#         time.sleep(debugger_wait_time)
+#         debugpy.wait_for_client.cancel()
+#     except Exception as e:
+#         print(f"Failed to cancel wait for client: {e}")
 
 
-try:
-    if pytest_settings.wait_for_debugger:
-        print(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
+# try:
+#     if pytest_settings.wait_for_debugger:
+#         print(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
 
-        t = threading.Thread(target=cancel_wait_for_client_after_timeout)
-        t.start()
-        print(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
-        debugpy.wait_for_client()
-except Exception as e:
-    print(f"Failed to attach debugger: {e}")
+#         t = threading.Thread(target=cancel_wait_for_client_after_timeout)
+#         t.start()
+#         print(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
+#         debugpy.wait_for_client()
+# except Exception as e:
+#     print(f"Failed to attach debugger: {e}")
 
-utils.export_env("OPAL_TESTS_DEBUG", "true")
-utils.install_opal_server_and_client()
+# utils.export_env("OPAL_TESTS_DEBUG", "true")
+# utils.install_opal_server_and_client()
 
 
 @pytest.fixture(scope="session")
