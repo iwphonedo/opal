@@ -11,11 +11,9 @@ from testcontainers.core.utils import setup_logger
 from tests import utils
 from tests.containers.broadcast_container_base import BroadcastContainerBase
 from tests.containers.gitea_container import GiteaContainer
-from tests.containers.opal_client_container import (
-    OpalClientContainer,
-    OpalTestContainer,
-)
-from tests.containers.opal_server_container import OpalServerContainer
+from tests.containers.opal_client_container import OpalClientContainer
+from tests.containers.opal_client_container import OpalClientContainer
+from containers.opal_server_container import OpalServerContainer
 from tests.policy_repos.policy_repo_factory import SupportedPolicyRepo
 from tests.settings import PyTestSessionSettings, session_matrix
 
@@ -29,6 +27,9 @@ def publish_data_user_location(
     src, user, DATASOURCE_TOKEN: str, port: int, topics: str = "policy_data"
 ):
     """Publish user location data to OPAL."""
+    logger.debug(
+        f"Running data publish and test for user: {user} | allowed country: {src} | on port: {port} | using token:\n{DATASOURCE_TOKEN}"
+    )
     # Construct the command to publish data update
     publish_data_user_location_command = (
         f"opal-client publish-data-update --server-url http://localhost:{port} --src-url {src} "
