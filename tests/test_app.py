@@ -231,7 +231,7 @@ def test_read_statistics(
 
         # Repeat the request multiple times
         for attempt in range(attempts):
-            print(f"Attempt {attempt + 1}/{attempts} - Checking statistics...")
+            logger.info(f"{utils.Color.GREEN}Attempt {utils.Color.RESET}{attempt + 1}/{attempts}{utils.Color.GREEN} - Checking statistics...{utils.Color.RESET}")
 
             try:
                 time.sleep(1)
@@ -239,7 +239,7 @@ def test_read_statistics(
                 response = requests.get(stats_url, headers=headers)
                 response.raise_for_status()  # Raise an error for HTTP status codes 4xx/5xx
 
-                print(f"Response: {response.status_code} {response.text}")
+                logger.info(f"Response: {response.status_code} {response.text}")
 
                 # Look for the expected data in the response
                 stats = utils.get_client_and_server_count(response.text)
@@ -250,10 +250,10 @@ def test_read_statistics(
 
                 client_count = stats["client_count"]
                 server_count = stats["server_count"]
-                print(
+                logger.info(
                     f"Number of OPAL servers expected: {number_of_opal_servers}, found: {server_count}"
                 )
-                print(
+                logger.info(
                     f"Number of OPAL clients expected: {number_of_opal_clients}, found: {client_count}"
                 )
 
