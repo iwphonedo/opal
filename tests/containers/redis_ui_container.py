@@ -34,3 +34,5 @@ class RedisUIContainer(OpalTestContainer, DockerContainer):
         self.with_bind_ports(5540, 5540)
 
         self.with_network_aliases("redis_ui")
+
+        self.start()

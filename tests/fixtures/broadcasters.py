@@ -10,6 +10,7 @@ from tests.containers.redis_ui_container import RedisUIContainer
 from tests.containers.settings.postgres_broadcast_settings import (
     PostgresBroadcastSettings,
 )
+from tests.containers.settings.redis_broadcast_settings import RedisBroadcastSettings
 from tests.containers.zookeeper_container import ZookeeperContainer
 
 logger = setup_logger(__name__)
@@ -25,8 +26,7 @@ def postgres_broadcast_channel(opal_network: Network):
     """
     try:
         container = PostgresBroadcastContainer(
-            network=opal_network,
-            settings=PostgresBroadcastSettings()
+            network=opal_network, settings=PostgresBroadcastSettings()
         )
         yield container
 
@@ -34,7 +34,9 @@ def postgres_broadcast_channel(opal_network: Network):
             if container.get_wrapped_container().status == "running":
                 container.stop()
         except Exception:
-            logger.error(f"Failed to stop containers: {container.settings.container_name}")
+            logger.error(
+                f"Failed to stop containers: {container.settings.container_name}"
+            )
             return
 
     except Exception as e:
@@ -80,17 +82,18 @@ def redis_broadcast_channel(opal_network: Network):
     container. The yield value is a list of the two containers. The
     fixture stops the containers after the test is done.
     """
-    with RedisBroadcastContainer(opal_network) as redis_container:
-        with RedisUIContainer(opal_network, redis_container) as redis_ui_container:
-            containers = [redis_container, redis_ui_container]
-            yield containers
+    redis_container = RedisBroadcastContainer(opal_network, RedisBroadcastSettings())
+    redis_ui_container = RedisUIContainer(opal_network, redis_container)
 
-            for container in containers:
-                try:
-                    container.stop()
-                except Exception:
-                    logger.error(f"Failed to stop containers: {container}")
-                    return
+    containers = [redis_container, redis_ui_container]
+    yield containers
+
+    for container in containers:
+        try:
+            container.stop()
+        except Exception:
+            logger.error(f"Failed to stop containers: {container}")
+            return
 
 
 @pytest.fixture(scope="session")
