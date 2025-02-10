@@ -3,23 +3,21 @@ from testcontainers.core.network import Network
 
 from tests.containers.kafka_broadcast_container import KafkaBroadcastContainer
 from tests.containers.opal_test_container import OpalTestContainer
+from tests.containers.settings.kafka_broadcast_settings import KafkaBroadcastSettings
 
 
 class KafkaUIContainer(OpalTestContainer, DockerContainer):
     def __init__(
         self,
         network: Network,
+        settings: KafkaBroadcastSettings,
         kafka_container: KafkaBroadcastContainer,
         docker_client_kw: dict | None = None,
         **kwargs,
     ) -> None:
-        # Add custom labels to the kwargs
-        labels = kwargs.get("labels", {})
-        labels.update({"com.docker.compose.project": "pytest"})
-        kwargs["labels"] = labels
-
-        self.kafka_container = kafka_container
         self.network = network
+        self.settings = settings
+        self.kafka_container = kafka_container
 
         self.image = "provectuslabs/kafka-ui:latest"
 

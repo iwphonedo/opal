@@ -134,8 +134,8 @@ def opal_servers(
     number_of_opal_servers: int,
     opal_server_image: str,
     topics: dict[str, int],
-    # kafka_broadcast_channel: KafkaBroadcastContainer,
-    redis_broadcast_channel: RedisBroadcastContainer,
+    kafka_broadcast_channel: KafkaBroadcastContainer,
+    # redis_broadcast_channel: RedisBroadcastContainer,
     session_matrix,
 ):
     """Fixture that initializes and manages OPAL server containers for testing.
@@ -162,7 +162,7 @@ def opal_servers(
         List[OpalServerContainer]: A list of running OPAL server containers.
     """
 
-    broadcast_channel = redis_broadcast_channel[0]
+    broadcast_channel = kafka_broadcast_channel[0]
 
     if not broadcast_channel:
         raise ValueError("Missing 'broadcast_channel' container.")

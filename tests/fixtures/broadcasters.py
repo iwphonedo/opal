@@ -7,6 +7,7 @@ from tests.containers.kafka_ui_container import KafkaUIContainer
 from tests.containers.postgres_broadcast_container import PostgresBroadcastContainer
 from tests.containers.redis_broadcast_container import RedisBroadcastContainer
 from tests.containers.redis_ui_container import RedisUIContainer
+from tests.containers.settings.kafka_broadcast_settings import KafkaBroadcastSettings
 from tests.containers.settings.postgres_broadcast_settings import (
     PostgresBroadcastSettings,
 )
@@ -58,12 +59,16 @@ def kafka_broadcast_channel(opal_network: Network):
     stop.
     """
 
-    with ZookeeperContainer(opal_network) as zookeeper_container:
+    kafka_settings = KafkaBroadcastSettings()
+
+    with ZookeeperContainer(opal_network, kafka_settings) as zookeeper_container:
         with KafkaBroadcastContainer(
-            opal_network, zookeeper_container
+            opal_network, kafka_settings, zookeeper_container
         ) as kafka_container:
-            with KafkaUIContainer(opal_network, kafka_container) as kafka_ui_container:
-                containers = [zookeeper_container, kafka_container, kafka_ui_container]
+            with KafkaUIContainer(
+                opal_network, kafka_settings, kafka_container
+            ) as kafka_ui_container:
+                containers = [kafka_container, kafka_ui_container, zookeeper_container]
                 yield containers
 
                 for container in containers:
