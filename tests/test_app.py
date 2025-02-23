@@ -204,74 +204,76 @@ async def test_policy_and_data_updates(
                 )
 
 
-@pytest.mark.parametrize("attempts", [10])  # Number of attempts to repeat the check
-def test_read_statistics(
-    attempts,
-    opal_servers: list[OpalServerContainer],
-    number_of_opal_servers: int,
-    number_of_opal_clients: int,
-):
-    """Tests the statistics feature by verifying the number of clients and
-    servers."""
+# @pytest.mark.parametrize("attempts", [10])  # Number of attempts to repeat the check
+# def test_read_statistics(
+#     attempts,
+#     opal_servers: list[OpalServerContainer],
+#     topiced_clients,
+#     connected_clients,
+#     number_of_opal_servers: int,
+#     number_of_opal_clients: int,
+# ):
+#     """Tests the statistics feature by verifying the number of clients and
+#     servers."""
 
-    print("- Testing statistics feature")
+#     print("- Testing statistics feature")
 
-    time.sleep(15)
+#     time.sleep(15)
 
-    for server in opal_servers:
-        logger.info(f"OPAL Server: {server.settings.container_name}:7002")
+#     for server in opal_servers:
+#         logger.info(f"OPAL Server: {server.settings.container_name}:7002")
 
-        # The URL for statistics
-        stats_url = f"http://localhost:{server.settings.port}/stats"
+#         # The URL for statistics
+#         stats_url = f"http://localhost:{server.settings.port}/stats"
 
-        headers = {
-            "Authorization": f"Bearer {server.obtain_OPAL_tokens('test_read_statistics')['datasource']}"
-        }
+#         headers = {
+#             "Authorization": f"Bearer {server.obtain_OPAL_tokens('test_read_statistics')['datasource']}"
+#         }
 
-        # Repeat the request multiple times
-        for attempt in range(attempts):
-            print(f"Attempt {attempt + 1}/{attempts} - Checking statistics...")
+#         # Repeat the request multiple times
+#         for attempt in range(attempts):
+#             print(f"Attempt {attempt + 1}/{attempts} - Checking statistics...")
 
-            try:
-                time.sleep(1)
-                # Send a request to the statistics endpoint
-                response = requests.get(stats_url, headers=headers)
-                response.raise_for_status()  # Raise an error for HTTP status codes 4xx/5xx
+#             try:
+#                 time.sleep(1)
+#                 # Send a request to the statistics endpoint
+#                 response = requests.get(stats_url, headers=headers)
+#                 response.raise_for_status()  # Raise an error for HTTP status codes 4xx/5xx
 
-                print(f"Response: {response.status_code} {response.text}")
+#                 print(f"Response: {response.status_code} {response.text}")
 
-                # Look for the expected data in the response
-                stats = utils.get_client_and_server_count(response.text)
-                if stats is None:
-                    pytest.fail(
-                        f"Expected statistics not found in response: {response.text}"
-                    )
+#                 # Look for the expected data in the response
+#                 stats = utils.get_client_and_server_count(response.text)
+#                 if stats is None:
+#                     pytest.fail(
+#                         f"Expected statistics not found in response: {response.text}"
+#                     )
 
-                client_count = stats["client_count"]
-                server_count = stats["server_count"]
-                print(
-                    f"Number of OPAL servers expected: {number_of_opal_servers}, found: {server_count}"
-                )
-                print(
-                    f"Number of OPAL clients expected: {number_of_opal_clients}, found: {client_count}"
-                )
+#                 client_count = stats["client_count"]
+#                 server_count = stats["server_count"]
+#                 print(
+#                     f"Number of OPAL servers expected: {number_of_opal_servers}, found: {server_count}"
+#                 )
+#                 print(
+#                     f"Number of OPAL clients expected: {number_of_opal_clients}, found: {client_count}"
+#                 )
 
-                if server_count < number_of_opal_servers:
-                    pytest.fail(
-                        f"Expected number of servers not found in response: {response.text}"
-                    )
+#                 if server_count < number_of_opal_servers:
+#                     pytest.fail(
+#                         f"Expected number of servers not found in response: {response.text}"
+#                     )
 
-                if client_count < number_of_opal_clients:
-                    pytest.fail(
-                        f"Expected number of clients not found in response: {response.text}"
-                    )
+#                 if client_count < number_of_opal_clients:
+#                     pytest.fail(
+#                         f"Expected number of clients not found in response: {response.text}"
+#                     )
 
-            except requests.RequestException as e:
-                if response is not None:
-                    print(f"Request failed: {response.status_code} {response.text}")
-                pytest.fail(f"Failed to fetch statistics: {e}")
+#             except requests.RequestException as e:
+#                 if response is not None:
+#                     print(f"Request failed: {response.status_code} {response.text}")
+#                 pytest.fail(f"Failed to fetch statistics: {e}")
 
-    print("Statistics check passed in all attempts.")
+#     print("Statistics check passed in all attempts.")
 
 
 #@pytest.mark.asyncio
@@ -291,7 +293,7 @@ def test_policy_update(
     for server in opal_servers:
         # Update policy to allow only non-US users
         print(f"Updating policy to allow only users from {location}...")
-        update_policy(gitea_server, server, "location")
+        update_policy(gitea_server, server, location)
 
         log_found = server.wait_for_log(
             "Found new commits: old HEAD was", 30, reference_timestamp

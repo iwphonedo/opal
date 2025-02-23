@@ -265,6 +265,7 @@ def opal_clients(
     request,
     number_of_opal_clients: int,
     opal_client_with_opa_image,
+    topiced_clients,
 ):
     """A fixture that starts and manages multiple OPAL client containers.
 
@@ -298,7 +299,7 @@ def opal_clients(
     if not opal_servers or len(opal_servers) == 0:
         raise ValueError("Missing 'opal_server' container.")
 
-    opal_server_url = f"http://{opal_servers[0].settings.container_name}:{opal_servers[0].settings.port}"
+    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"
 
     containers = []  # List to store OpalClientContainer instances
 
@@ -399,7 +400,7 @@ def topiced_clients(
     if not opal_servers or len(opal_servers) == 0:
         raise ValueError("Missing 'opal_server' container.")
 
-    opal_server_url = f"http://{opal_servers[0].settings.container_name}:{opal_servers[0].settings.port}"
+    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"
     containers = {}  # List to store OpalClientContainer instances
 
     client_token = opal_servers[0].obtain_OPAL_tokens("topiced_opal_client_?x?")[
