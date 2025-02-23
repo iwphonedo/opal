@@ -1,3 +1,4 @@
+from testcontainers.core.container import DockerContainer
 import pytest
 from testcontainers.core.network import Network
 from testcontainers.core.utils import setup_logger
@@ -46,37 +47,38 @@ def postgres_broadcast_channel(opal_network: Network):
         )
         return
 
-
 @pytest.fixture(scope="session")
 def kafka_broadcast_channel(opal_network: Network):
     """Fixture that sets up a Kafka broadcast channel for testing purposes.
-
-    This fixture initializes a Zookeeper container, a Kafka container,
-    and a Kafka UI container, connecting them to the specified network.
-    It yields a list of these containers, which remain running
-    throughout the test session. At the end of the session, it attempts
-    to stop each container, logging an error if any container fails to
-    stop.
+    
+    This fixture initializes all necessary Kafka-related containers, connecting them to the specified network.
+    It yields a list of these containers, which remain running throughout the test session. At the end of the session,
+    it attempts to stop each container, logging an error if any container fails to stop.
     """
+    
+    from tests.containers.kafka.Kafka_ui import KafkaUIContainer
+    from tests.containers.kafka.KafkaContainer import KafkaContainer
+    from tests.containers.kafka.Zookeeper import ZookeeperContainer
+    import time
 
-    kafka_settings = KafkaBroadcastSettings()
+    zookeeper = ZookeeperContainer(opal_network)
+    # zookeeper.start()
+    time.sleep(5)
+    
+    kafka0 = KafkaContainer(opal_network)
+    # kafka0.start()
+    time.sleep(5)
+    
+    kafka_ui = KafkaUIContainer(opal_network)
+    # kafka_ui.start()
+    time.sleep(5)
 
-    with ZookeeperContainer(opal_network, kafka_settings) as zookeeper_container:
-        with KafkaBroadcastContainer(
-            opal_network, kafka_settings, zookeeper_container
-        ) as kafka_container:
-            with KafkaUIContainer(
-                opal_network, kafka_settings, kafka_container
-            ) as kafka_ui_container:
-                containers = [kafka_container, kafka_ui_container, zookeeper_container]
-                yield containers
+    yield [kafka0, zookeeper, kafka_ui]
 
-                for container in containers:
-                    try:
-                        container.stop()
-                    except Exception:
-                        logger.error(f"Failed to stop container: {container}")
-                        return
+    zookeeper.stop()
+    kafka0.stop()
+    kafka_ui.stop()
+
 
 
 @pytest.fixture(scope="session")
