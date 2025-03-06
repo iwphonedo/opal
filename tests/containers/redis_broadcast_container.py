@@ -29,3 +29,6 @@ class RedisBroadcastContainer(PermitContainer, RedisContainer):
         self.with_name(self.settings.container_name)
 
         self.start()
+    
+    def get_url(self) -> str:
+        return f"redis://{self.settings.container_name}:{self.settings.port}"

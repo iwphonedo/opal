@@ -62,7 +62,7 @@ except Exception as e:
     print(f"Failed to attach debugger: {e}")
 
 utils.export_env("OPAL_TESTS_DEBUG", "true")
-utils.install_opal_server_and_client()
+# utils.install_opal_server_and_client()
 
 
 @pytest.fixture(scope="session")
@@ -134,8 +134,8 @@ def opal_servers(
     number_of_opal_servers: int,
     opal_server_image: str,
     topics: dict[str, int],
-    kafka_broadcast_channel: KafkaBroadcastContainer,
-    #redis_broadcast_channel: RedisBroadcastContainer,
+    # kafka_broadcast_channel: KafkaBroadcastContainer,
+    redis_broadcast_channel: RedisBroadcastContainer,
     session_matrix,
 ):
     """Fixture that initializes and manages OPAL server containers for testing.
@@ -162,8 +162,8 @@ def opal_servers(
         List[OpalServerContainer]: A list of running OPAL server containers.
     """
 
-    #broadcast_channel = redis_broadcast_channel
-    broadcast_channel = kafka_broadcast_channel
+    broadcast_channel = redis_broadcast_channel
+    # broadcast_channel = kafka_broadcast_channel
     broadcast_channel = broadcast_channel[0]
 
     if not broadcast_channel:

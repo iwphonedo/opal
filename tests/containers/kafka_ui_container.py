@@ -2,7 +2,7 @@ from testcontainers.core.container import DockerContainer
 from testcontainers.core.network import Network
 
 from tests.containers.kafka_broadcast_container import KafkaBroadcastContainer
-from tests.containers.PermitContainer import PermitContainer
+from tests.containers.permitContainer import PermitContainer
 from tests.containers.settings.kafka_broadcast_settings import KafkaBroadcastSettings
 
 

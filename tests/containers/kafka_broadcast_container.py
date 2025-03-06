@@ -3,7 +3,7 @@ from testcontainers.core.network import Network
 from testcontainers.kafka import KafkaContainer
 
 from tests.containers.broadcast_container_base import BroadcastContainerBase
-from tests.containers.PermitContainer import PermitContainer
+from tests.containers.permitContainer import PermitContainer
 from tests.containers.settings import kafka_broadcast_settings
 from tests.containers.zookeeper_container import ZookeeperContainer
 
