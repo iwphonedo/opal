@@ -17,7 +17,7 @@ from tests import utils
 from tests.containers.broadcast_container_base import BroadcastContainerBase
 from tests.containers.cedar_container import CedarContainer
 from tests.containers.gitea_container import GiteaContainer
-from tests.containers.kafka_broadcast_container import KafkaBroadcastContainer
+from tests.containers.kafka.KafkaContainer import KafkaContainer
 from tests.containers.opa_container import OpaContainer, OpaSettings
 from tests.containers.opal_client_container import OpalClientContainer
 from tests.containers.opal_server_container import OpalServerContainer
@@ -129,13 +129,13 @@ from tests.fixtures.policy_repos import gitea_server, gitea_settings, policy_rep
 @pytest.fixture(scope="session")
 def opal_servers(
     opal_network: Network,
-    # broadcast_channel: BroadcastContainerBase,
     policy_repo: PolicyRepoBase,
     number_of_opal_servers: int,
     opal_server_image: str,
     topics: dict[str, int],
-    kafka_broadcast_channel: KafkaBroadcastContainer,
+    # kafka_broadcast_channel,
     # redis_broadcast_channel: RedisBroadcastContainer,
+    broadcast_channel,
     session_matrix,
 ):
     """Fixture that initializes and manages OPAL server containers for testing.
@@ -162,7 +162,9 @@ def opal_servers(
         List[OpalServerContainer]: A list of running OPAL server containers.
     """
 
-    broadcast_channel = kafka_broadcast_channel[0]
+    # broadcast_channel = kafka_broadcast_channel[0]
+    # broadcast_channel = redis_broadcast_channel[0]
+    broadcast_channel = broadcast_channel[0]
 
     if not broadcast_channel:
         raise ValueError("Missing 'broadcast_channel' container.")
@@ -260,52 +262,19 @@ from tests.fixtures.policy_stores import cedar_server, opa_server
 def opal_clients(
     opal_network: Network,
     opal_servers: List[OpalServerContainer],
-    # opa_server: OpaContainer,
-    # cedar_server: CedarContainer,
     request,
     number_of_opal_clients: int,
     opal_client_with_opa_image,
     topiced_clients,
 ):
-    """A fixture that starts and manages multiple OPAL client containers.
-
-    This fixture takes a list of OPAL server containers as input and starts a
-    specified number of OPAL client containers, each connected to the first
-    OPAL server container. The fixture yields the list of started OPAL client
-    containers.
-
-    Parameters
-    ----------
-    opal_network : Network
-        The Docker network to which the containers are connected.
-    opal_servers : List[OpalServerContainer]
-        A list of OPAL server containers.
-    #opa_server : OpaContainer
-        # The OPA server container.
-    cedar_server : CedarContainer
-        The Cedar server container.
-    request
-        The pytest request object.
-    number_of_opal_clients : int
-        The number of OPAL clients to start.
-    opal_client_image
-        The Docker image used for the OPAL clients.
-
-    Yields
-    ------
-    List[OpalClientContainer]
-        A list of started OPAL client containers.
-    """
     if not opal_servers or len(opal_servers) == 0:
         raise ValueError("Missing 'opal_server' container.")
 
     opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"
-
-    containers = []  # List to store OpalClientContainer instances
+    containers = []
 
     for i in range(number_of_opal_clients):
-        container_name = f"opal_client_{i+1}"  # Unique name for each client
-
+        container_name = f"opal_client_{i+1}"
         client_token = opal_servers[0].obtain_OPAL_tokens(container_name)["client"]
         callbacks = json.dumps(
             {
@@ -333,6 +302,7 @@ def opal_clients(
                 opal_server_url=opal_server_url,
                 client_token=client_token,
                 default_update_callbacks=callbacks,
+                topics=["policy_data"],  # Add this line
             ),
             network=opal_network,
         )
@@ -351,7 +321,6 @@ def opal_clients(
     except Exception:
         logger.error(f"Failed to stop containers: {container}")
         pass
-
 
 @pytest.fixture(scope="session")
 def topics():

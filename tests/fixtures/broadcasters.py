@@ -3,8 +3,8 @@ import pytest
 from testcontainers.core.network import Network
 from testcontainers.core.utils import setup_logger
 
-from tests.containers.kafka_broadcast_container import KafkaBroadcastContainer
-from tests.containers.kafka_ui_container import KafkaUIContainer
+from tests.containers.kafka.KafkaContainer import KafkaContainer
+from tests.containers.kafka.Kafka_ui import KafkaUIContainer
 from tests.containers.postgres_broadcast_container import PostgresBroadcastContainer
 from tests.containers.redis_broadcast_container import RedisBroadcastContainer
 from tests.containers.redis_ui_container import RedisUIContainer
@@ -13,7 +13,7 @@ from tests.containers.settings.postgres_broadcast_settings import (
     PostgresBroadcastSettings,
 )
 from tests.containers.settings.redis_broadcast_settings import RedisBroadcastSettings
-from tests.containers.zookeeper_container import ZookeeperContainer
+from tests.containers.kafka.Zookeeper import ZookeeperContainer
 
 logger = setup_logger(__name__)
 
@@ -30,7 +30,7 @@ def postgres_broadcast_channel(opal_network: Network):
         container = PostgresBroadcastContainer(
             network=opal_network, settings=PostgresBroadcastSettings()
         )
-        yield container
+        yield [container]
 
         try:
             if container.get_wrapped_container().status == "running":
