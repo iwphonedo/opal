@@ -4,8 +4,8 @@ from testcontainers.kafka import KafkaContainer
 
 from tests.containers.broadcast_container_base import BroadcastContainerBase
 from tests.containers.permitContainer import PermitContainer
-from tests.containers.settings import kafka_broadcast_settings
-from tests.containers.zookeeper_container import ZookeeperContainer
+from tests.containers.kafka.settings import kafka_broadcast_settings
+from tests.containers.kafka.zookeeper_container import ZookeeperContainer
 
 
 class KafkaBroadcastContainer(PermitContainer, KafkaContainer):

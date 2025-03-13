@@ -4,7 +4,7 @@ from testcontainers.core.network import Network
 
 import docker
 from tests.containers.permitContainer import PermitContainer
-from tests.containers.settings.kafka_broadcast_settings import KafkaBroadcastSettings
+from tests.containers.kafka.settings.kafka_broadcast_settings import KafkaBroadcastSettings
 
 
 class ZookeeperContainer(PermitContainer, DockerContainer):

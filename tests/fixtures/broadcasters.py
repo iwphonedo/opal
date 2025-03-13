@@ -2,17 +2,17 @@ import pytest
 from testcontainers.core.network import Network
 from testcontainers.core.utils import setup_logger
 
-from tests.containers.kafka_broadcast_container import KafkaBroadcastContainer
-from tests.containers.kafka_ui_container import KafkaUIContainer
+from tests.containers.kafka.kafka_broadcast_container import KafkaBroadcastContainer
+from tests.containers.kafka.kafka_ui_container import KafkaUIContainer
 from tests.containers.postgres_broadcast_container import PostgresBroadcastContainer
 from tests.containers.redis_broadcast_container import RedisBroadcastContainer
 from tests.containers.redis_ui_container import RedisUIContainer
-from tests.containers.settings.kafka_broadcast_settings import KafkaBroadcastSettings
+from tests.containers.kafka.settings.kafka_broadcast_settings import KafkaBroadcastSettings
 from tests.containers.settings.postgres_broadcast_settings import (
     PostgresBroadcastSettings,
 )
 from tests.containers.settings.redis_broadcast_settings import RedisBroadcastSettings
-from tests.containers.zookeeper_container import ZookeeperContainer
+from tests.containers.kafka.zookeeper_container import ZookeeperContainer
 
 logger = setup_logger(__name__)
 
@@ -26,12 +26,18 @@ def postgres_broadcast_channel(opal_network: Network):
     unless an exception is raised during teardown.
     """
     try:
-        container = PostgresBroadcastContainer(
-            network=opal_network,
-            settings=PostgresBroadcastSettings()
-        )
-        yield [container]
-
+        try:
+            container = PostgresBroadcastContainer(
+                network=opal_network,
+                settings=PostgresBroadcastSettings()
+            )
+            yield [container]
+        except Exception as e:
+            logger.error(
+                f"Failed to start container: {container} with error: {e} {e.__traceback__}"
+            )
+            exit(1)
+        
         try:
             if container.get_wrapped_container().status == "running":
                 container.stop()
@@ -103,9 +109,4 @@ def broadcast_channel(opal_network: Network, postgres_broadcast_channel):
     """
 
     yield postgres_broadcast_channel
-
-    try:
-        postgres_broadcast_channel.stop()
-    except Exception:
-        logger.error(f"Failed to stop containers: {postgres_broadcast_channel}")
-        return
+    return

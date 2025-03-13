@@ -1,9 +1,9 @@
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.network import Network
 
-from tests.containers.kafka_broadcast_container import KafkaBroadcastContainer
+from tests.containers.kafka.kafka_broadcast_container import KafkaBroadcastContainer
 from tests.containers.permitContainer import PermitContainer
-from tests.containers.settings.kafka_broadcast_settings import KafkaBroadcastSettings
+from tests.containers.kafka.settings.kafka_broadcast_settings import KafkaBroadcastSettings
 
 
 class KafkaUIContainer(PermitContainer, DockerContainer):
