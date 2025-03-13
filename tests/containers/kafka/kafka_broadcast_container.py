@@ -1,43 +1,34 @@
-import debugpy
+from testcontainers.core.container import DockerContainer
 from testcontainers.core.network import Network
-from testcontainers.kafka import KafkaContainer
 
-from tests.containers.broadcast_container_base import BroadcastContainerBase
-from tests.containers.permitContainer import PermitContainer
-from tests.containers.kafka.settings import kafka_broadcast_settings
-from tests.containers.kafka.zookeeper_container import ZookeeperContainer
-
-
-class KafkaBroadcastContainer(PermitContainer, KafkaContainer):
-    def __init__(
-        self,
-        network: Network,
-        zookeeper_container: ZookeeperContainer,
-        kafka_settings: kafka_broadcast_settings,
-        docker_client_kw: dict | None = None,
-        **kwargs,
-    ) -> None:
-        # Add custom labels to the kwargs
-        labels = kwargs.get("labels", {})
-        labels.update({"com.docker.compose.project": "pytest"})
-        kwargs["labels"] = labels
-
-        self.settings = kafka_settings
-
-        self.zookeeper_container = zookeeper_container
-        self.network = network
-
-        PermitContainer.__init__(self)
-        KafkaContainer.__init__(self, docker_client_kw=docker_client_kw, **kwargs)
-
-        self.with_network(self.network)
-
-        for key, value in self.settings.getKafkaEnvVars().items():
+class KafkaContainer(DockerContainer):
+    def __init__(self, network: Network):
+            # Kafka Broker 0
+        self.settings = {
+            "env": {
+                "KAFKA_BROKER_ID": "1",
+                "KAFKA_ZOOKEEPER_CONNECT": "zookeeper:2181",
+                "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR": "1",
+                "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP": "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT",
+                "KAFKA_ADVERTISED_LISTENERS": "PLAINTEXT_HOST://localhost:29092,PLAINTEXT://kafka0:9092",
+                "ALLOW_PLAINTEXT_LISTENER": "yes",
+                "KAFKA_TOPIC_AUTO_CREATE": "true",
+                "KAFKA_TRANSACTION_STATE_LOG_MIN_ISR": "1",
+                "KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR": "1",
+            }
+        }
+        DockerContainer.__init__(self, image="confluentinc/cp-kafka:6.2.0")
+        self.with_exposed_ports(9092, 29092)
+        for key, value in self.settings.get("env").items():
             self.with_env(key, value)
-
-        self.with_network_aliases("broadcast_channel")
-
-        # Add a custom name for the container
-        self.with_name(self.settings.kafka_container_name)
+        
+        self.with_name("kafka0")
+        self.with_network(network)
+        self.with_network_aliases("kafka0")
 
         self.start()
+
+
+    def get_url(self) -> str:
+        url = "kafka://kafka0:9092"
+        return url
