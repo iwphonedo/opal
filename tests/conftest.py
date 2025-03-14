@@ -17,8 +17,8 @@ from tests import utils
 from tests.containers.broadcast_container_base import BroadcastContainerBase
 from tests.containers.cedar_container import CedarContainer
 from tests.containers.gitea_container import GiteaContainer
-from tests.containers.kafka_broadcast_container import KafkaBroadcastContainer
-from tests.containers.opa_container import OpaContainer, OpaSettings
+from tests.containers.kafka.kafka_broadcast_container import KafkaContainer
+from tests.containers.OPA.opa_container import OpaContainer, OpaSettings
 from tests.containers.opal_client_container import OpalClientContainer
 from tests.containers.opal_server_container import OpalServerContainer
 from tests.containers.postgres_broadcast_container import PostgresBroadcastContainer
@@ -49,17 +49,17 @@ def cancel_wait_for_client_after_timeout():
         time.sleep(debugger_wait_time)
         debugpy.wait_for_client.cancel()
     except Exception as e:
-        print(f"Failed to cancel wait for client: {e}")
+        logger.debug(f"Failed to cancel wait for client: {e}")
 
 
 try:
     if pytest_settings.wait_for_debugger:
         t = threading.Thread(target=cancel_wait_for_client_after_timeout)
         t.start()
-        print(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
+        logger.debug(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
         debugpy.wait_for_client()
 except Exception as e:
-    print(f"Failed to attach debugger: {e}")
+    logger.debug(f"Failed to attach debugger: {e}")
 
 utils.export_env("OPAL_TESTS_DEBUG", "true")
 # utils.install_opal_server_and_client()
@@ -78,12 +78,12 @@ def temp_dir():
     exist for the duration of the test session.
     """
     dir_path = tempfile.mkdtemp()
-    print(f"Temporary directory created: {dir_path}")
+    logger.debug(f"Temporary directory created: {dir_path}")
     yield dir_path
 
     # Teardown: Clean up the temporary directory
     shutil.rmtree(dir_path)
-    print(f"Temporary directory removed: {dir_path}")
+    logger.debug(f"Temporary directory removed: {dir_path}")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -96,18 +96,16 @@ def opal_network():
 
     yield network
 
-    print("Removing network...")
-    time.sleep(5)  # wait for the containers to stop
+    logger.info("Removing network...")
+    time.sleep(3)  # wait for the containers to stop
     try:
-        for container in network._network.containers:
-            container.kill()
         network.remove()
         logger.info("Network removed.")
     except Exception as e:
         if logger.level == "DEBUG":
             logger.error(f"Failed to remove network: {e}")
         else:
-            logger.error(f"Failed to remove network got exception")
+            logger.error(f"Failed to remove network got exception\n{e}")
 
 @pytest.fixture(scope="session")
 def number_of_opal_servers():
@@ -140,8 +138,8 @@ def opal_servers(
     number_of_opal_servers: int,
     opal_server_image: str,
     topics: dict[str, int],
-    # broadcast_channel: BroadcastContainerBase,
-    kafka_broadcast_channel: KafkaBroadcastContainer,
+    broadcast_channel: BroadcastContainerBase,
+    # kafka_broadcast_channel: KafkaContainer,
     # redis_broadcast_channel: RedisBroadcastContainer,
     session_matrix,
 ):
@@ -170,7 +168,7 @@ def opal_servers(
     """
 
     # broadcast_channel = redis_broadcast_channel
-    broadcast_channel = kafka_broadcast_channel
+    # broadcast_channel = kafka_broadcast_channel
     broadcast_channel = broadcast_channel[0]
 
     if not broadcast_channel:
@@ -207,7 +205,7 @@ def opal_servers(
             )
             policy_repo.create_webhook()
 
-        print(
+        logger.info(
             f"Started container: {container_name}, ID: {container.get_wrapped_container().id}"
         )
         container.wait_for_log("Clone succeeded", timeout=30)
@@ -308,7 +306,7 @@ def opal_clients(
     if not opal_servers or len(opal_servers) == 0:
         raise ValueError("Missing 'opal_server' container.")
 
-    opal_server_url = f"http://{opal_servers[0].settings.container_name}:{opal_servers[0].settings.port}"
+    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"#{opal_servers[0].settings.port}"
 
     containers = []  # List to store OpalClientContainer instances
 
@@ -347,7 +345,7 @@ def opal_clients(
         )
 
         container.start()
-        print(
+        logger.info(
             f"Started OpalClientContainer: {container_name}, ID: {container.get_wrapped_container().id}"
         )
         containers.append(container)
@@ -409,7 +407,7 @@ def topiced_clients(
     if not opal_servers or len(opal_servers) == 0:
         raise ValueError("Missing 'opal_server' container.")
 
-    opal_server_url = f"http://{opal_servers[0].settings.container_name}:{opal_servers[0].settings.port}"
+    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"#{opal_servers[0].settings.port}"
     containers = {}  # List to store OpalClientContainer instances
 
     client_token = opal_servers[0].obtain_OPAL_tokens("topiced_opal_client_?x?")[
@@ -480,10 +478,10 @@ def wait_sometime():
     """
 
     if os.getenv("GITHUB_ACTIONS") == "true":
-        print("Running inside GitHub Actions. Sleeping for 30 seconds...")
+        logger.info("Running inside GitHub Actions. Sleeping for 30 seconds...")
         time.sleep(3600)  # Sleep for 30 seconds
     else:
-        print("Running on the local machine. Press Enter to continue...")
+        logger.info("Running on the local machine. Press Enter to continue...")
         input()  # Wait for key press
 
 

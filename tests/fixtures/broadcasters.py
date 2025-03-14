@@ -2,7 +2,7 @@ import pytest
 from testcontainers.core.network import Network
 from testcontainers.core.utils import setup_logger
 
-from tests.containers.kafka.kafka_broadcast_container import KafkaBroadcastContainer
+from tests.containers.kafka.kafka_broadcast_container import KafkaContainer
 from tests.containers.kafka.kafka_ui_container import KafkaUIContainer
 from tests.containers.postgres_broadcast_container import PostgresBroadcastContainer
 from tests.containers.redis_broadcast_container import RedisBroadcastContainer
@@ -39,7 +39,10 @@ def postgres_broadcast_channel(opal_network: Network):
             exit(1)
         
         try:
-            if container.get_wrapped_container().status == "running":
+            if container.get_wrapped_container().status == "running" or container.get_wrapped_container().status == "created":
+                container.stop()
+            else:
+                logger.info(f"Container status is: {container.get_wrapped_container().status}")
                 container.stop()
         except Exception:
             logger.error(f"Failed to stop containers: {container}")
@@ -64,9 +67,9 @@ def kafka_broadcast_channel(opal_network: Network):
     stop.
     """
 
-    zookeeper_container = ZookeeperContainer(opal_network, KafkaBroadcastSettings())
-    kafka_container = KafkaBroadcastContainer(opal_network, zookeeper_container, KafkaBroadcastSettings())
-    kafka_ui_container = KafkaUIContainer(opal_network, kafka_container, KafkaBroadcastSettings())
+    zookeeper_container = ZookeeperContainer(opal_network)
+    kafka_container = KafkaContainer(opal_network)
+    kafka_ui_container = KafkaUIContainer(opal_network)
     containers = [kafka_container, zookeeper_container, kafka_ui_container]
     yield containers
 
