@@ -83,23 +83,38 @@ def policy_repo(
     if pytest_settings.policy_repo_provider == SupportedPolicyRepo.GITEA:
         gitea_server = request.getfixturevalue("gitea_server")
 
+    # repo_settings = PolicyRepoSettings(
+    #     temp_dir,
+    #     pytest_settings.repo_owner,
+    #     pytest_settings.repo_name,
+    #     "master",
+    #     gitea_settings.container_name,
+    #     gitea_settings.port_http,
+    #     gitea_settings.port_ssh,
+    #     pytest_settings.repo_password,
+    #     None,
+    #     pytest_settings.ssh_key_path,
+    #     pytest_settings.source_repo_owner,
+    #     pytest_settings.source_repo_name,
+    #     True,
+    #     True,
+    #     pytest_settings.webhook_secret,
+    # )
+
+
     repo_settings = PolicyRepoSettings(
-        temp_dir,
-        pytest_settings.repo_owner,
-        pytest_settings.repo_name,
-        "master",
-        gitea_settings.container_name,
-        gitea_settings.port_http,
-        gitea_settings.port_ssh,
-        pytest_settings.repo_password,
-        None,
-        pytest_settings.ssh_key_path,
-        pytest_settings.source_repo_owner,
-        pytest_settings.source_repo_name,
-        True,
-        True,
-        pytest_settings.webhook_secret,
+        source_repo_owner = "",
+        local_clone_path = "",
+        source_repo_name = "",
+        webhook_secret = "",
+        ssh_key_path = "",
+        should_fork = "",
+        repo_name = "",
+        password = "",
+        owner = "",
+        pat = "",
     )
+    
     policy_repo = PolicyRepoFactory(
         pytest_settings.policy_repo_provider
     ).get_policy_repo(

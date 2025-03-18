@@ -32,6 +32,8 @@ def publish_data_user_location(
         f"-t {topics} --dst-path /users/{user}/location {DATASOURCE_TOKEN}"
     )
 
+    # Log the command being executed
+    logger.info(f"Executing command: {publish_data_user_location_command}")
     # Execute the command
     result = subprocess.run(publish_data_user_location_command, shell=True)
     # Check command execution result
@@ -60,11 +62,11 @@ async def data_publish_and_test(
         )
 
         if allowed_country == user_country:
-            print(
+            logger.info(
                 f"{user}'s location set to: {user_country}. current_country is set to: {allowed_country} Expected outcome: ALLOWED."
             )
         else:
-            print(
+            logger.info(
                 f"{user}'s location set to: {user_country}. current_country is set to: {allowed_country} Expected outcome: NOT ALLOWED."
             )
 
@@ -73,6 +75,7 @@ async def data_publish_and_test(
         assert await utils.opal_authorize(
             user,
             f"http://localhost:{opal_client.settings.opa_port}/v1/data/app/rbac/allow",
+            # f"http://localhost:8181/v1/data/app/rbac/allow",
         ) == (allowed_country == user_country)
     return True
 
@@ -101,6 +104,7 @@ def update_policy(
     )
 
     utils.wait_policy_repo_polling_interval(opal_server_container)
+
 
 
 def test_topiced_user_location(
@@ -169,7 +173,7 @@ def test_user_location(
 async def test_policy_and_data_updates(
     gitea_server: GiteaContainer,
     opal_servers: list[OpalServerContainer],
-    opal_clients: list[OpalClientContainer],
+    connected_clients: list[OpalClientContainer],
     temp_dir,
 ):
     """This script updates policy configurations and tests access based on
@@ -187,10 +191,10 @@ async def test_policy_and_data_updates(
 
         for location in locations:
             # Update policy to allow only non-US users
-            print(f"Updating policy to allow only users from {location[1]}...")
+            logger.info(f"Updating policy to allow only users from {location[1]}...")
             update_policy(gitea_server, server, location[1])
 
-            for client in opal_clients:
+            for client in connected_clients:
                 assert await data_publish_and_test(
                     "bob",
                     location[1],
@@ -211,12 +215,12 @@ def test_read_statistics(
     """Tests the statistics feature by verifying the number of clients and
     servers."""
 
-    print("- Testing statistics feature")
+    logger.info("- Testing statistics feature")
 
     time.sleep(15)
 
     for server in opal_servers:
-        print(f"OPAL Server: {server.settings.container_name}:7002")
+        logger.info(f"OPAL Server: {server.settings.container_name}:7002")
 
         # The URL for statistics
         stats_url = f"http://localhost:{server.settings.port}/stats"
@@ -227,7 +231,7 @@ def test_read_statistics(
 
         # Repeat the request multiple times
         for attempt in range(attempts):
-            print(f"Attempt {attempt + 1}/{attempts} - Checking statistics...")
+            logger.info(f"Attempt {attempt + 1}/{attempts} - Checking statistics...")
 
             try:
                 time.sleep(1)
@@ -235,7 +239,7 @@ def test_read_statistics(
                 response = requests.get(stats_url, headers=headers)
                 response.raise_for_status()  # Raise an error for HTTP status codes 4xx/5xx
 
-                print(f"Response: {response.status_code} {response.text}")
+                logger.debug(f"Response: {response.status_code} {response.text}")
 
                 # Look for the expected data in the response
                 stats = utils.get_client_and_server_count(response.text)
@@ -246,10 +250,10 @@ def test_read_statistics(
 
                 client_count = stats["client_count"]
                 server_count = stats["server_count"]
-                print(
+                logger.info(
                     f"Number of OPAL servers expected: {number_of_opal_servers}, found: {server_count}"
                 )
-                print(
+                logger.info(
                     f"Number of OPAL clients expected: {number_of_opal_clients}, found: {client_count}"
                 )
 
@@ -265,17 +269,17 @@ def test_read_statistics(
 
             except requests.RequestException as e:
                 if response is not None:
-                    print(f"Request failed: {response.status_code} {response.text}")
+                    logger.error(f"Request failed: {response.status_code} {response.text}")
                 pytest.fail(f"Failed to fetch statistics: {e}")
 
-    print("Statistics check passed in all attempts.")
+    logger.info("Statistics check passed in all attempts.")
 
 
 @pytest.mark.asyncio
 async def test_policy_update(
     gitea_server: GiteaContainer,
     opal_servers: list[OpalServerContainer],
-    opal_clients: list[OpalClientContainer],
+    connected_clients: list[OpalClientContainer],
     temp_dir,
 ):
     # Parse locations into separate lists of IPs and countries
@@ -287,8 +291,8 @@ async def test_policy_update(
 
     for server in opal_servers:
         # Update policy to allow only non-US users
-        print(f"Updating policy to allow only users from {location}...")
-        update_policy(gitea_server, server, "location")
+        logger.info(f"Updating policy to allow only users from {location}...")
+        update_policy(gitea_server, server, location)
 
         log_found = server.wait_for_log(
             "Found new commits: old HEAD was", 30, reference_timestamp
@@ -298,7 +302,7 @@ async def test_policy_update(
             log_found
         ), f"Expected log entry not found in server '{server.settings.container_name}' after the reference timestamp."
 
-    for client in opal_clients:
+    for client in connected_clients:
         log_found = client.wait_for_log(
             "Fetching policy bundle from", 30, reference_timestamp
         )

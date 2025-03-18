@@ -104,7 +104,7 @@ from testcontainers.core.utils import setup_logger
 class PyTestSessionSettings(List):
     repo_providers = ["gitea"]
     modes = ["without_webhook"]
-    broadcasters = ["postgres"]
+    broadcasters = ["postgres", "redis"]
     broadcaster = "fgsfdg"
     repo_provider = "fdgdfg"
     mode = "rgrtre"

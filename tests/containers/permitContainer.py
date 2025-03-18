@@ -10,9 +10,7 @@ class PermitContainer:
         self.permitLogger = setup_logger(__name__)
 
         # Regex to match any ANSI-escaped timestamp in the format YYYY-MM-DDTHH:MM:SS.mmmmmm+0000
-        self.timestamp_with_ansi = (
-            r"\x1b\[.*?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}\+\d{4})"
-        )
+        self.timestamp_with_ansi = (r"\x1b\[.*?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}\+\d{4})")
         self.errors = []
         # self.check_errors()
 
@@ -47,11 +45,17 @@ class PermitContainer:
 
             # Search for the timestamp in the line
             match = re.search(self.timestamp_with_ansi, decoded_line)
+            if (reference_timestamp is None):
+                if log_str in decoded_line:
+                    log_found = True
+                    break
+
             if match:
-                log_timestamp_string = match.group(1)
-                log_timestamp = datetime.strptime(
-                    log_timestamp_string, "%Y-%m-%dT%H:%M:%S.%f%z"
-                )
+                if reference_timestamp is not None:
+                    log_timestamp_string = match.group(1)
+                    log_timestamp = datetime.strptime(
+                        log_timestamp_string, "%Y-%m-%dT%H:%M:%S.%f%z"
+                    )
 
                 if (reference_timestamp is None) or (
                     log_timestamp > reference_timestamp

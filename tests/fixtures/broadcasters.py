@@ -14,10 +14,12 @@ from tests.containers.settings.postgres_broadcast_settings import (
 from tests.containers.settings.redis_broadcast_settings import RedisBroadcastSettings
 from tests.containers.kafka.zookeeper_container import ZookeeperContainer
 
+from tests.settings import session_matrix
+
 logger = setup_logger(__name__)
 
 
-@pytest.fixture(scope="session")
+# @pytest.fixture(scope="session")
 def postgres_broadcast_channel(opal_network: Network):
     """Fixture that yields a running Postgres broadcast channel container.
 
@@ -81,7 +83,7 @@ def kafka_broadcast_channel(opal_network: Network):
             return
 
 
-@pytest.fixture(scope="session")
+# @pytest.fixture(scope="session")
 def redis_broadcast_channel(opal_network: Network):
     """Fixture that yields a running redis broadcast channel container.
 
@@ -102,8 +104,14 @@ def redis_broadcast_channel(opal_network: Network):
             return
 
 
+broadcasters_map = {
+    "postgres": postgres_broadcast_channel,
+    "kafka": kafka_broadcast_channel,
+    "redis": redis_broadcast_channel
+}
+
 @pytest.fixture(scope="session")
-def broadcast_channel(opal_network: Network, postgres_broadcast_channel):
+def broadcast_channel(opal_network: Network, session_matrix):
     """Fixture that yields a running broadcast channel container.
 
     The container is started once and kept running throughout the entire
@@ -111,5 +119,7 @@ def broadcast_channel(opal_network: Network, postgres_broadcast_channel):
     unless an exception is raised during teardown.
     """
 
-    yield postgres_broadcast_channel
-    return
+    # logger.info(f"Using {session_matrix["broadcaster"]} broadcaster")
+    # input()
+
+    yield from broadcasters_map[session_matrix["broadcaster"]](opal_network)

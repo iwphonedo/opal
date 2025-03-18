@@ -340,6 +340,9 @@ def opal_clients(
                 opal_server_url=opal_server_url,
                 client_token=client_token,
                 default_update_callbacks=callbacks,
+                # inline_opa_enabled=False,
+                # policy_store_url=f"http://localhost:8181",#{opa_server.settings.port}",
+                # opa_port=opa_server.settings.port,
             ),
             network=opal_network,
         )
