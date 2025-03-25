@@ -10,32 +10,14 @@ import debugpy
 import pytest
 from testcontainers.core.network import Network
 from testcontainers.core.utils import setup_logger
-from testcontainers.core.waiting_utils import wait_for_logs
 
-import docker
 from tests import utils
 from tests.containers.broadcast_container_base import BroadcastContainerBase
-from tests.containers.cedar_container import CedarContainer
-from tests.containers.gitea_container import GiteaContainer
-from tests.containers.kafka.kafka_broadcast_container import KafkaContainer
-from tests.containers.OPA.opa_container import OpaContainer, OpaSettings
 from tests.containers.opal_client_container import OpalClientContainer
 from tests.containers.opal_server_container import OpalServerContainer
-from tests.containers.postgres_broadcast_container import PostgresBroadcastContainer
-from tests.containers.redis_broadcast_container import RedisBroadcastContainer
-from tests.containers.settings.cedar_settings import CedarSettings
-from tests.containers.settings.gitea_settings import GiteaSettings
 from tests.containers.settings.opal_client_settings import OpalClientSettings
 from tests.containers.settings.opal_server_settings import OpalServerSettings
-from tests.containers.settings.postgres_broadcast_settings import (
-    PostgresBroadcastSettings,
-)
 from tests.policy_repos.policy_repo_base import PolicyRepoBase
-from tests.policy_repos.policy_repo_factory import (
-    PolicyRepoFactory,
-    SupportedPolicyRepo,
-)
-from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
 from tests.settings import pytest_settings
 
 logger = setup_logger(__name__)
@@ -77,7 +59,8 @@ def temp_dir():
     This fixture is useful for tests that need a temporary directory to
     exist for the duration of the test session.
     """
-    dir_path = tempfile.mkdtemp()
+    dir_path = tempfile.mkdtemp(prefix="opal_tests_",suffix=".tmp",dir="/opal.tmp")
+    os.chmod(dir_path, 0o777)  # Set permissions to allow read/write/execute for all users
     logger.debug(f"Temporary directory created: {dir_path}")
     yield dir_path
 
@@ -128,13 +111,13 @@ from tests.fixtures.broadcasters import (
     redis_broadcast_channel,
 )
 from tests.fixtures.images import opal_server_image
-from tests.fixtures.policy_repos import gitea_server, gitea_settings, policy_repo
+from tests.fixtures.policy_repos import policy_repo
 
 
 @pytest.fixture(scope="session")
 def opal_servers(
     opal_network: Network,
-    policy_repo: PolicyRepoBase,
+    policy_repo,
     number_of_opal_servers: int,
     opal_server_image: str,
     topics: dict[str, int],
@@ -180,17 +163,19 @@ def opal_servers(
     for i in range(number_of_opal_servers):
         container_name = f"opal_server_{i+1}"
 
+        repo_url = policy_repo.get_repo_url()
         container = OpalServerContainer(
             OpalServerSettings(
                 broadcast_uri=broadcast_channel.get_url(),
                 container_name=container_name,
                 container_index=i + 1,
                 uvicorn_workers="4",
-                policy_repo_url=policy_repo.get_repo_url(),
+                policy_repo_url=repo_url,
                 image=opal_server_image,
                 log_level="DEBUG",
                 data_topics=" ".join(topics.keys()),
                 polling_interval=3,
+                policy_repo_main_branch=policy_repo.test_branch,
             ),
             network=opal_network,
         )
@@ -200,10 +185,11 @@ def opal_servers(
 
         if i == 0:
             # Only the first server should setup the webhook
-            policy_repo.setup_webhook(
-                container.get_container_host_ip(), container.settings.port
-            )
-            policy_repo.create_webhook()
+            # policy_repo.setup_webhook(
+            #     container.get_container_host_ip(), container.settings.port
+            # )
+            # policy_repo.create_webhook()
+            pass
 
         logger.info(
             f"Started container: {container_name}, ID: {container.get_wrapped_container().id}"
@@ -489,7 +475,7 @@ def wait_sometime():
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup(opal_clients, session_matrix):
+def setup(opal_clients, policy_repo, session_matrix):
     """A setup fixture that is run once per test session.
 
     This fixture is automatically used by all tests, and is used to set up the
@@ -511,7 +497,7 @@ def setup(opal_clients, session_matrix):
     None
     """
     yield
-
+    policy_repo.cleanup(delete_ssh_key=False)
     if session_matrix["is_final"]:
         logger.info("Finalizing test session...")
         utils.remove_env("OPAL_TESTS_DEBUG")

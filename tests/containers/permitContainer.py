@@ -126,9 +126,7 @@ class PermitContainer:
             self.permitLogger.info(f"Checking log line: {decoded_line}")
             self.permitLogger.info(f"scanning line: {decoded_line}")
             if log_str in decoded_line:
-                self.permitLogger.error("\n\n\n\n")
                 self.permitLogger.error(f"error found: {decoded_line}")
-                self.permitLogger.error("\n\n\n\n")
                 self.errors.append(decoded_line)
 
     def __del__(self):

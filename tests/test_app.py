@@ -13,6 +13,7 @@ from tests.containers.broadcast_container_base import BroadcastContainerBase
 from tests.containers.gitea_container import GiteaContainer
 from tests.containers.opal_client_container import OpalClientContainer, PermitContainer
 from tests.containers.opal_server_container import OpalServerContainer
+from tests.policy_repos.policy_repo_base import PolicyRepoBase
 from tests.policy_repos.policy_repo_factory import SupportedPolicyRepo
 from tests.settings import PyTestSessionSettings, session_matrix
 
@@ -81,14 +82,14 @@ async def data_publish_and_test(
 
 
 def update_policy(
-    gitea_container: GiteaContainer,
+    policy_repo: PolicyRepoBase,
     opal_server_container: OpalServerContainer,
     country_value,
 ):
     """Update the policy file dynamically."""
 
-    gitea_container.update_branch(
-        opal_server_container.settings.policy_repo_main_branch,
+    policy_repo.update_branch(
+        # opal_server_container.settings.policy_repo_main_branch,
         "rbac.rego",
         (
             "package app.rbac\n"
@@ -171,7 +172,7 @@ def test_user_location(
 # @pytest.mark.parametrize("location", ["CN", "US", "SE"])
 @pytest.mark.asyncio
 async def test_policy_and_data_updates(
-    gitea_server: GiteaContainer,
+    policy_repo,
     opal_servers: list[OpalServerContainer],
     connected_clients: list[OpalClientContainer],
     temp_dir,
@@ -192,7 +193,7 @@ async def test_policy_and_data_updates(
         for location in locations:
             # Update policy to allow only non-US users
             logger.info(f"Updating policy to allow only users from {location[1]}...")
-            update_policy(gitea_server, server, location[1])
+            update_policy(policy_repo, server, location[1])
 
             for client in connected_clients:
                 assert await data_publish_and_test(
@@ -277,7 +278,7 @@ def test_read_statistics(
 
 @pytest.mark.asyncio
 async def test_policy_update(
-    gitea_server: GiteaContainer,
+    policy_repo,
     opal_servers: list[OpalServerContainer],
     connected_clients: list[OpalClientContainer],
     temp_dir,
@@ -292,7 +293,7 @@ async def test_policy_update(
     for server in opal_servers:
         # Update policy to allow only non-US users
         logger.info(f"Updating policy to allow only users from {location}...")
-        update_policy(gitea_server, server, location)
+        update_policy(policy_repo, server, location)
 
         log_found = server.wait_for_log(
             "Found new commits: old HEAD was", 30, reference_timestamp

@@ -102,9 +102,9 @@ from testcontainers.core.utils import setup_logger
 
 
 class PyTestSessionSettings(List):
-    repo_providers = ["gitea"]
+    repo_providers = [SupportedPolicyRepo.GITHUB]#, SupportedPolicyRepo.GITEA]
     modes = ["without_webhook"]
-    broadcasters = ["postgres", "redis"]
+    broadcasters = ["postgres"]#, "redis"]
     broadcaster = "fgsfdg"
     repo_provider = "fdgdfg"
     mode = "rgrtre"
@@ -161,6 +161,7 @@ class PyTestSessionSettings(List):
                 "mode": self.mode,
                 "is_final": (self.current_broadcaster >= len(self.broadcasters)),
                 "is_first": is_first,
+                "github_pat":pytest_settings.github_pat,
             }
 
         print("Finished iterating over PyTestSessionSettings...")

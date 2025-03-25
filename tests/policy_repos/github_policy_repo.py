@@ -11,6 +11,7 @@ from github import Auth, Github
 from testcontainers.core.utils import setup_logger
 
 from tests import utils
+from tests.policy_repos.github_policy_settings import GithubPolicyRepoSettings
 from tests.policy_repos.policy_repo_base import PolicyRepoBase
 from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
 
@@ -18,68 +19,20 @@ from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
 class GithubPolicyRepo(PolicyRepoBase):
     def __init__(
         self,
-        settings: PolicyRepoSettings,
+        settings: GithubPolicyRepoSettings,
         logger: logging.Logger = setup_logger(__name__),
     ):
         self.logger = logger
-        self.load_from_env()
-
-        self.protocol = "git"
-        self.host = "github.com"
-        self.port = 22
-        self.temp_dir = settings.local_clone_path
-        self.ssh_key_name = "OPAL_PYTEST"
-
-        self.owner = settings.owner if settings.owner else self.owner
-        self.password = settings.password
-        self.github_pat = settings.pat if settings.pat else self.github_pat
-        self.repo = settings.repo_name if settings.repo_name else self.repo
-
-        self.source_repo_owner = (
-            settings.source_repo_owner
-            if settings.source_repo_owner
-            else self.source_repo_owner
-        )
-        self.source_repo_name = (
-            settings.source_repo_name
-            if settings.source_repo_name
-            else self.source_repo_name
-        )
-
-        self.local_repo_path = os.path.join(self.temp_dir, self.source_repo_name)
-        self.ssh_key_path = (
-            settings.ssh_key_path if settings.ssh_key_path else self.ssh_key_path
-        )
-        self.should_fork = settings.should_fork
-        self.webhook_secret = (
-            settings.webhook_secret if settings.webhook_secret else self.webhook_secret
-        )
-
-        if not self.password and not self.github_pat and not self.ssh_key_path:
-            self.logger.error("No password or Github PAT or SSH key provided.")
-            raise Exception("No authentication method provided.")
+        self.settings = settings
 
         self.load_ssh_key()
 
-    def load_from_env(self):
-        self.owner = os.getenv("OPAL_TARGET_ACCOUNT", None)
-        self.github_pat = os.getenv("OPAL_GITHUB_PAT", None)
-        self.ssh_key_path = os.getenv(
-            "OPAL_PYTEST_POLICY_REPO_SSH_KEY_PATH", "~/.ssh/id_rsa"
-        )
-        self.repo = os.getenv("OPAL_TARGET_REPO_NAME", "opal-example-policy-repo")
-        self.source_repo_owner = os.getenv("OPAL_SOURCE_ACCOUNT", "permitio")
-        self.source_repo_name = os.getenv(
-            "OPAL_SOURCE_REPO_NAME", "opal-example-policy-repo"
-        )
-        self.webhook_secret: str = os.getenv("OPAL_WEBHOOK_SECRET", "xxxxx")
-
     def load_ssh_key(self):
-        if self.ssh_key_path.startswith("~"):
-            self.ssh_key_path = os.path.expanduser("~/.ssh/id_rsa")
+        if self.settings.ssh_key_path.startswith("~"):
+            self.settings.ssh_key_path = os.path.expanduser("~/.ssh/id_rsa")
 
-        if not os.path.exists(self.ssh_key_path):
-            self.logger.debug(f"SSH key file not found at {self.ssh_key_path}")
+        if not os.path.exists(self.settings.ssh_key_path):
+            self.logger.debug(f"SSH key file not found at {self.settings.ssh_key_path}")
 
             self.logger.debug("Generating new SSH key...")
             ssh_keys = utils.generate_ssh_key_pair()
@@ -87,7 +40,7 @@ class GithubPolicyRepo(PolicyRepoBase):
             self.private_key = ssh_keys["private"]
 
         try:
-            with open(self.ssh_key_path, "r") as ssh_key_file:
+            with open(self.settings.ssh_key_path, "r") as ssh_key_file:
                 self.ssh_key = ssh_key_file.read().strip()
 
             os.environ["OPAL_POLICY_REPO_SSH_KEY"] = self.ssh_key
@@ -108,37 +61,37 @@ class GithubPolicyRepo(PolicyRepoBase):
             env_file.write(f'OPAL_POLICY_REPO_SSH_KEY="{self.ssh_key}"\n')
 
     def get_repo_url(self):
-        return self.build_repo_url(self.owner, self.repo)
+        return self.build_repo_url(self.settings.owner, self.settings.repo)
 
     def build_repo_url(self, owner, repo) -> str:
         if owner is None:
             raise Exception("Owner not set")
 
-        if self.protocol == "ssh" or self.protocol == "git":
-            return f"git@{self.host}:{owner}/{repo}.git"
+        if self.settings.protocol == "ssh" or self.settings.protocol == "git":
+            return f"git@{self.settings.host}:{owner}/{repo}.git"
 
-        if self.protocol == "http" or self.protocol == "https":
-            if self.github_pat:
-                return f"{self.protocol}://{self.host}/{owner}/{repo}.git"
+        if self.settings.protocol == "http" or self.settings.protocol == "https":
+            if self.settings.github_pat:
+                return f"{self.settings.protocol}://{self.settings.host}/{owner}/{repo}.git"
 
-        if self.password is None and self.github_pat is None and self.ssh_key is None:
+        if self.settings.password is None and self.settings.github_pat is None and self.ssh_key is None:
             raise Exception("No authentication method set")
 
-        return f"{self.protocol}://{self.owner}:{self.password}@{self.host}:{self.port}/{owner}/{repo}"
+        return f"{self.settings.protocol}://{self.settings.owner}:{self.settings.password}@{self.settings.host}:{self.settings.port}/{owner}/{repo}"
 
     def get_source_repo_url(self):
-        return self.build_repo_url(self.source_repo_owner, self.source_repo_name)
+        return self.build_repo_url(self.settings.source_repo_owner, self.settings.source_repo_name)
 
     def clone_initial_repo(self):
-        Repo.clone_from(self.get_source_repo_url(), self.local_repo_path)
+        Repo.clone_from(self.get_source_repo_url(), self.settings.local_repo_path)
 
     def check_repo_exists(self):
         try:
-            gh = Github(auth=Auth.Token(self.github_pat))
+            gh = Github(auth=Auth.Token(self.settings.github_pat))
             repo_list = gh.get_user().get_repos()
             for repo in repo_list:
-                if repo.full_name == self.repo:
-                    self.logger.debug(f"Repository {self.repo} already exists.")
+                if repo.full_name == self.settings.repo:
+                    self.logger.debug(f"Repository {self.settings.repo} already exists.")
                     return True
 
         except Exception as e:
@@ -151,9 +104,9 @@ class GithubPolicyRepo(PolicyRepoBase):
             return
 
         try:
-            gh = Github(auth=Auth.Token(self.github_pat))
-            gh.get_user().create_repo(self.repo)
-            self.logger.info(f"Repository {self.repo} created successfully.")
+            gh = Github(auth=Auth.Token(self.settings.github_pat))
+            gh.get_user().create_repo(self.settings.repo)
+            self.logger.info(f"Repository {self.settings.repo} created successfully.")
         except Exception as e:
             self.logger.error(f"Error creating repository: {e}")
 
@@ -161,14 +114,14 @@ class GithubPolicyRepo(PolicyRepoBase):
         if self.check_repo_exists():
             return
 
-        self.logger.debug(f"Forking repository {self.source_repo_name}...")
+        self.logger.debug(f"Forking repository {self.settings.source_repo_name}...")
 
-        if self.github_pat is None:
+        if self.settings.github_pat is None:
             try:
-                gh = Github(auth=Auth.Token(self.github_pat))
-                gh.get_user().create_fork(self.source_repo_owner, self.source_repo_name)
+                gh = Github(auth=Auth.Token(self.settings.github_pat))
+                gh.get_user().create_fork(self.settings.source_repo_owner, self.settings.source_repo_name)
                 self.logger.info(
-                    f"Repository {self.source_repo_name} forked successfully."
+                    f"Repository {self.settings.source_repo_name} forked successfully."
                 )
             except Exception as e:
                 self.logger.error(f"Error forking repository: {e}")
@@ -176,9 +129,9 @@ class GithubPolicyRepo(PolicyRepoBase):
 
         # Try with PAT
         try:
-            headers = {"Authorization": f"token {self.github_pat}"}
+            headers = {"Authorization": f"token {self.settings.github_pat}"}
             response = requests.post(
-                f"https://api.github.com/repos/{self.source_repo_owner}/{self.source_repo_name}/forks",
+                f"https://api.github.com/repos/{self.settings.source_repo_owner}/{self.settings.source_repo_name}/forks",
                 headers=headers,
             )
             if response.status_code == 202:
@@ -198,13 +151,13 @@ class GithubPolicyRepo(PolicyRepoBase):
         repository."""
 
         try:
-            self.logger.info(f"Deleting test branches from {self.repo}...")
+            self.logger.info(f"Deleting test branches from {self.settings.repo}...")
 
             # Initialize Github API
-            gh = Github(auth=Auth.Token(self.github_pat))
+            gh = Github(auth=Auth.Token(self.settings.github_pat))
 
             # Get the repository
-            repo = gh.get_user().get_repo(self.repo)
+            repo = gh.get_user().get_repo(self.settings.repo)
 
             # Enumerate branches and delete pytest- branches
             branches = repo.get_branches()
@@ -231,7 +184,7 @@ class GithubPolicyRepo(PolicyRepoBase):
     def create_test_branch(self):
         try:
             # Initialize the repository
-            repo = Repo(self.local_repo_path)
+            repo = Repo(self.settings.local_repo_path)
 
             # Ensure the repository is clean
             if repo.is_dirty(untracked_files=True):
@@ -240,7 +193,7 @@ class GithubPolicyRepo(PolicyRepoBase):
                 )
 
             # Set the origin remote URL
-            remote_url = f"https://github.com/{self.owner}/{self.repo}.git"
+            remote_url = f"https://github.com/{self.settings.owner}/{self.settings.repo}.git"
             if "origin" in repo.remotes:
                 origin = repo.remote(name="origin")
                 origin.set_url(remote_url)  # Update origin URL if it exists
@@ -267,7 +220,7 @@ class GithubPolicyRepo(PolicyRepoBase):
             self.logger.error(f"An error occurred: {e}")
 
     def cleanup(self, delete_repo=True, delete_ssh_key=True):
-        subprocess.run(["rm", "-rf", "./opal-example-policy-repo"], check=True)
+        subprocess.run(["rm", "-rf", self.settings.local_repo_path], check=True)
 
         self.delete_test_branches()
 
@@ -278,11 +231,11 @@ class GithubPolicyRepo(PolicyRepoBase):
             self.delete_ssh_key()
 
     def delete_ssh_key(self):
-        gh = Github(auth=Auth.Token(self.github_pat))
+        gh = Github(auth=Auth.Token(self.settings.github_pat))
         user = gh.get_user()
         keys = user.get_keys()
         for key in keys:
-            if key.title == self.ssh_key_name:
+            if key.title == self.settings.ssh_key_name:
                 key.delete()
                 self.logger.debug(f"SSH key deleted: {key.title}")
                 break
@@ -293,17 +246,17 @@ class GithubPolicyRepo(PolicyRepoBase):
 
     def delete_repo(self):
         try:
-            gh = Github(auth=Auth.Token(self.github_pat))
-            repo = gh.get_user().get_repo(self.repo)
+            gh = Github(auth=Auth.Token(self.settings.github_pat))
+            repo = gh.get_user().get_repo(self.settings.repo)
             repo.delete()
-            self.logger.debug(f"Repository {self.repo} deleted successfully.")
+            self.logger.debug(f"Repository {self.settings.repo} deleted successfully.")
         except Exception as e:
             self.logger.error(f"Error deleting repository: {e}")
 
     def setup(self):
         self.clone_initial_repo()
 
-        if self.should_fork:
+        if self.settings.should_fork:
             self.fork_target_repo()
         else:
             self.create_target_repo()
@@ -312,23 +265,23 @@ class GithubPolicyRepo(PolicyRepoBase):
         self.create_test_branch()
 
     def add_ssh_key(self):
-        gh = Github(auth=Auth.Token(self.github_pat))
+        gh = Github(auth=Auth.Token(self.settings.github_pat))
         user = gh.get_user()
         keys = user.get_keys()
         for key in keys:
-            if key.title == self.ssh_key_name:
+            if key.title == self.settings.ssh_key_name:
                 return
 
-        key = user.create_key(self.ssh_key_name, self.ssh_key)
+        key = user.create_key(self.settings.ssh_key_name, self.ssh_key)
         self.logger.info(f"SSH key added: {key.title}")
 
     def create_webhook(self):
         try:
-            gh = Github(auth=Auth.Token(self.github_pat))
+            gh = Github(auth=Auth.Token(self.settings.github_pat))
             self.logger.info(
-                f"Creating webhook for repository {self.owner}/{self.repo}"
+                f"Creating webhook for repository {self.settings.owner}/{self.settings.repo}"
             )
-            repo = gh.get_user().get_repo(f"{self.repo}")
+            repo = gh.get_user().get_repo(f"{self.settings.repo}")
             url = utils.create_localtunnel(self.webhook_port)
             self.logger.info(f"Webhook URL: {url}")
             self.github_webhook = repo.create_hook(
@@ -348,8 +301,8 @@ class GithubPolicyRepo(PolicyRepoBase):
 
     def delete_webhook(self):
         try:
-            gh = Github(auth=Auth.Token(self.github_pat))
-            repo = gh.get_user().get_repo(f"{self.repo}")
+            gh = Github(auth=Auth.Token(self.settings.github_pat))
+            repo = gh.get_user().get_repo(f"{self.settings.repo}")
             repo.delete_hook(self.github_webhook.id)
             self.logger.info("Webhook deleted successfully.")
         except Exception as e:
@@ -365,31 +318,32 @@ class GithubPolicyRepo(PolicyRepoBase):
             file_content = codecs.decode(file_content, "unicode_escape")
 
             # Create or update the specified file with the provided content
-            file_path = os.path.join(self.local_repo_path, file_name)
+            file_path = os.path.join(self.settings.local_repo_path, file_name)
             with open(file_path, "w") as f:
                 f.write(file_content)
 
-        if file_content is None:
-            with open(file_path, "r") as f:
-                file_content = f.read()
+        # if file_content is None:
+        #     with open(file_path, "r") as f:
+        #         file_content = f.read()
 
         try:
             # Stage the changes
             self.logger.debug(f"Staging changes for branch {self.test_branch}...")
-            gh = Github(auth=Auth.Token(self.github_pat))
-            repo = gh.get_user().get_repo(self.repo)
+            gh = Github(auth=Auth.Token(self.settings.github_pat))
+            repo = gh.get_user().get_repo(self.settings.repo)
             branch_ref = f"heads/{self.test_branch}"
             ref = repo.get_git_ref(branch_ref)
             latest_commit = repo.get_git_commit(ref.object.sha)
-            base_tree = latest_commit.commit.tree
+            base_tree = latest_commit.tree
+            from github.InputGitTreeElement import InputGitTreeElement
             new_tree = repo.create_git_tree(
                 [
-                    {
-                        "path": file_name,
-                        "mode": "100644",
-                        "type": "blob",
-                        "content": file_content,
-                    }
+                    InputGitTreeElement(
+                        path=file_name,
+                        mode="100644",
+                        type="blob",
+                        content=file_content,
+                    )
                 ],
                 base_tree,
             )

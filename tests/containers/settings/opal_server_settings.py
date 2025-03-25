@@ -40,6 +40,7 @@ class OpalServerSettings:
         all_data_url: str = None,
         policy_repo_reuse_clone_path: bool = None,
         container_index: int = 1,
+        POLICY_REPO_SSH_KEY: str = None,
         **kwargs,
     ):
         """Initialize the OPAL Server with the provided parameters.
@@ -149,6 +150,12 @@ class OpalServerSettings:
         self.webhook_secret = webhook_secret if webhook_secret else self.webhook_secret
         self.webhook_params = webhook_params if webhook_params else self.webhook_params
 
+        self.POLICY_REPO_SSH_KEY = (
+            POLICY_REPO_SSH_KEY if POLICY_REPO_SSH_KEY else self.POLICY_REPO_SSH_KEY
+        )
+
+        # Update with additional keyword arguments
+
         self.__dict__.update(kwargs)
 
         self.validate_dependencies()
@@ -185,6 +192,7 @@ class OpalServerSettings:
             "UVICORN_PORT": self.uvicorn_port,
             "OPAL_ALL_DATA_URL": self.all_data_url,
             "OPAL_POLICY_REPO_REUSE_CLONE_PATH": self.policy_repo_reuse_clone_path,
+            "OPAL_POLICY_REPO_SSH_KEY": self.POLICY_REPO_SSH_KEY
         }
 
         if pytest_settings.use_webhook:
@@ -257,6 +265,8 @@ class OpalServerSettings:
             "OPAL_SERVER_UVICORN_ASGI_APP", "opal_server.main:app"
         )
         self.uvicorn_port = os.getenv("OPAL_SERVER_UVICORN_PORT", "7002")
+
+        self.POLICY_REPO_SSH_KEY = os.getenv("OPAL_POLICY_REPO_SSH_KEY", None)
 
         if not self.private_key or not self.public_key:
             self.private_key, self.public_key = utils.generate_ssh_key_pair()
