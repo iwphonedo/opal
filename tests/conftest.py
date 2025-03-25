@@ -59,13 +59,20 @@ def temp_dir():
     This fixture is useful for tests that need a temporary directory to
     exist for the duration of the test session.
     """
-    dir_path = tempfile.mkdtemp(prefix="opal_tests_",suffix=".tmp",dir="/opal.tmp")
+    from pathlib import Path
+
+    path = Path("~/opal.tmp").expanduser()
+    path.mkdir(parents=True, exist_ok=True)
+    os.chmod(path, 0o777)  # Set permissions to allow read/write/execute for all users
+
+    dir_path = tempfile.mkdtemp(prefix="opal_tests_",suffix=".tmp",dir=str(path))
     os.chmod(dir_path, 0o777)  # Set permissions to allow read/write/execute for all users
     logger.debug(f"Temporary directory created: {dir_path}")
     yield dir_path
 
     # Teardown: Clean up the temporary directory
     shutil.rmtree(dir_path)
+    shutil.rmtree(path)
     logger.debug(f"Temporary directory removed: {dir_path}")
 
 
