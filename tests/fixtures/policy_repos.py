@@ -64,18 +64,31 @@ def gitea_server(opal_network: Network):
     yield gitea_container
 
 def create_github_policy_repo_settings(temp_dir: str, session_matrix):
-   return GithubPolicyRepoSettings(
+    # logger.info("Creating GithubPolicyRepoSettings...")
+    # logger.info("\n\n\n\n")
+    # logger.info(session_matrix)
+    # logger.info("\n\n\n\n")
+   
+    # input()
+
+
+    return GithubPolicyRepoSettings(
         temp_dir = temp_dir,
-        source_repo_owner = "ariWeinberg",
         local_clone_path = temp_dir,
+
+        source_repo_owner = "ariWeinberg",
         source_repo_name = "opal-tests-policy-repo",
-        webhook_secret = "Aa15317701",
-        ssh_key_path = "/home/ari/.ssh/github",
-        should_fork = False,
         repo_name = "opal-tests-policy-repo1",
-        password = "",
         owner = "ariWeinberg",
+        
+        ssh_key_path = session_matrix["ssh_key_path"],
+        
         pat = session_matrix["github_pat"],
+
+        webhook_secret = session_matrix["webhook_secret"],
+        should_fork = False,
+        # should_fork = session_matrix["should_fork"],
+        password = session_matrix["repo_password"],
     )
 
 def create_gitea_policy_repo_settings(temp_dir: str, session_matrix, gitea_settings: GiteaSettings):

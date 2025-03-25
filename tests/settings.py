@@ -61,33 +61,29 @@ class TestSettings:
 
         load_dotenv()
 
-        self.policy_repo_provider = os.getenv(
-            "OPAL_PYTEST_POLICY_REPO_PROVIDER", SupportedPolicyRepo.GITEA
-        )
+        self.policy_repo_provider = os.getenv("OPAL_PYTEST_POLICY_REPO_PROVIDER", SupportedPolicyRepo.GITEA)
         self.repo_owner = os.getenv("OPAL_PYTEST_REPO_OWNER", "iwphonedo")
         self.repo_name = os.getenv("OPAL_PYTEST_REPO_NAME", "opal-example-policy-repo")
         self.repo_password = os.getenv("OPAL_PYTEST_REPO_PASSWORD")
         self.github_pat = os.getenv("OPAL_PYTEST_GITHUB_PAT")
         self.ssh_key_path = os.getenv("OPAL_PYTEST_SSH_KEY_PATH")
         self.source_repo_owner = os.getenv("OPAL_PYTEST_SOURCE_ACCOUNT", "permitio")
-        self.source_repo_name = os.getenv(
-            "OPAL_PYTEST_SOURCE_REPO", "opal-example-policy-repo"
-        )
+        self.source_repo_name = os.getenv("OPAL_PYTEST_SOURCE_REPO", "opal-example-policy-repo")
         self.webhook_secret = os.getenv("OPAL_PYTEST_WEBHOOK_SECRET", "xxxxx")
-        self.should_fork = os.getenv("OPAL_PYTEST_SHOULD_FORK", "true")
-        self.use_webhook = os.getenv("OPAL_PYTEST_USE_WEBHOOK", "true")
-        self.wait_for_debugger = os.getenv("OPAL_PYTEST_WAIT_FOR_DEBUGGER", False)
+        self.should_fork = bool(os.getenv("OPAL_PYTEST_SHOULD_FORK", True))
+        self.use_webhook = bool(os.getenv("OPAL_PYTEST_USE_WEBHOOK", True))
+        self.wait_for_debugger = bool(os.getenv("OPAL_PYTEST_WAIT_FOR_DEBUGGER", False))
 
         # This will fallback to the official permitio images of opal-server and opal-client, you could use it to fallback also opa and cedar
-        self.do_not_build_images = os.getenv("OPAL_PYTEST_DO_NOT_BUILD_IMAGES", False)
+        self.do_not_build_images = bool(os.getenv("OPAL_PYTEST_DO_NOT_BUILD_IMAGES", False))
 
         # This will use the same image between test sessions. Otherwise, it will rebuild the images with every execution.
         # Don't use it if you changed the code, as your changes won't be deployed.
         # In order to use this flag, you should first set the keep_images flag to true, and for the following execution you will have the images.
-        self.skip_rebuild_images = os.getenv("OPAL_PYTEST_SKIP_REBUILD_IMAGES", False)
+        self.skip_rebuild_images = bool(os.getenv("OPAL_PYTEST_SKIP_REBUILD_IMAGES", False))
 
         # This will keep the images after the test session. If you use it, you will be able to use skip_rebuild_images the next time.
-        self.keep_images = os.getenv("OPAL_PYTEST_KEEP_IMAGES", True)
+        self.keep_images = bool(os.getenv("OPAL_PYTEST_KEEP_IMAGES", True))
 
     def dump_settings(self):
         with open(f"pytest_{self.session_id}.env", "w") as envfile:
@@ -102,9 +98,9 @@ from testcontainers.core.utils import setup_logger
 
 
 class PyTestSessionSettings(List):
-    repo_providers = [SupportedPolicyRepo.GITHUB, SupportedPolicyRepo.GITEA]
+    repo_providers = [SupportedPolicyRepo.GITHUB]#, SupportedPolicyRepo.GITEA]
     modes = ["without_webhook"]
-    broadcasters = ["postgres", "redis"]
+    broadcasters = ["postgres"]#, "redis"]
     broadcaster = "fgsfdg"
     repo_provider = "fdgdfg"
     mode = "rgrtre"
@@ -159,9 +155,28 @@ class PyTestSessionSettings(List):
                 "repo_provider": self.repo_provider,
                 "broadcaster": self.broadcaster,
                 "mode": self.mode,
+
+
                 "is_final": (self.current_broadcaster >= len(self.broadcasters)),
                 "is_first": is_first,
+
+
                 "github_pat":pytest_settings.github_pat,
+                "repo_owner": pytest_settings.repo_owner,
+                "repo_name": pytest_settings.repo_name,
+                "repo_password": pytest_settings.repo_password,
+                "github_pat": pytest_settings.github_pat,
+                "ssh_key_path": pytest_settings.ssh_key_path,
+                "source_repo_owner": pytest_settings.source_repo_owner,
+                "source_repo_name": pytest_settings.source_repo_name,
+                "webhook_secret": pytest_settings.webhook_secret,
+                "should_fork": pytest_settings.should_fork,
+                "use_webhook": pytest_settings.use_webhook,
+                "wait_for_debugger": pytest_settings.wait_for_debugger,
+                "do_not_build_images": pytest_settings.do_not_build_images,
+                "skip_rebuild_images": pytest_settings.skip_rebuild_images,
+                "keep_images": pytest_settings.keep_images,
+
             }
 
         print("Finished iterating over PyTestSessionSettings...")

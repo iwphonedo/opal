@@ -103,6 +103,9 @@ class GithubPolicyRepoSettings:
         # Set the secret to use for the webhook
         self.webhook_secret = webhook_secret if webhook_secret else self.webhook_secret
 
+        # self.logger.info(f"\n\n\nPolicyRepoSettings: {self.__dict__}\n\n\n")
+        # input()
+
 
         # Validate the dependencies and load the SSH key
         self.validate_dependencies()
