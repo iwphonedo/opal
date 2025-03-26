@@ -76,10 +76,10 @@ def create_github_policy_repo_settings(temp_dir: str, session_matrix):
         temp_dir = temp_dir,
         local_clone_path = temp_dir,
 
-        source_repo_owner = "ariWeinberg",
-        source_repo_name = "opal-tests-policy-repo",
-        repo_name = "opal-tests-policy-repo1",
-        owner = "ariWeinberg",
+        source_repo_owner = session_matrix["source_repo_owner"],
+        source_repo_name = session_matrix["source_repo_name"],
+        repo_name = session_matrix["repo_name"],
+        owner = session_matrix["repo_owner"],
         
         ssh_key_path = session_matrix["ssh_key_path"],
         
