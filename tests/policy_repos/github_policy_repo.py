@@ -29,7 +29,7 @@ class GithubPolicyRepo(PolicyRepoBase):
 
     def load_ssh_key(self):
         if self.settings.ssh_key_path.startswith("~"):
-            self.settings.ssh_key_path = os.path.expanduser("~/.ssh/id_rsa")
+            self.settings.ssh_key_path = os.path.expanduser(self.settings.ssh_key_path)
 
         if not os.path.exists(self.settings.ssh_key_path):
             self.logger.debug(f"SSH key file not found at {self.settings.ssh_key_path}")
