@@ -98,9 +98,9 @@ from testcontainers.core.utils import setup_logger
 
 
 class PyTestSessionSettings(List):
-    repo_providers = [SupportedPolicyRepo.GITHUB]#, SupportedPolicyRepo.GITEA]
+    repo_providers = [SupportedPolicyRepo.GITHUB, SupportedPolicyRepo.GITEA]
     modes = ["without_webhook"]
-    broadcasters = ["postgres"]#, "redis"]
+    broadcasters = ["postgres", "redis"]
     broadcaster = "fgsfdg"
     repo_provider = "fdgdfg"
     mode = "rgrtre"
