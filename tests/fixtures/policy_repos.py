@@ -128,24 +128,6 @@ def create_gitea_policy_repo_settings(temp_dir: str, session_matrix, gitea_setti
         webhook_secret = pytest_settings.webhook_secret
     )
 
-    return GiteaPolicyRepoSettings(
-        temp_dir,
-        pytest_settings.repo_owner,
-        pytest_settings.repo_name,
-        "master",
-        gitea_settings.container_name,
-        gitea_settings.port_http,
-        gitea_settings.port_ssh,
-        pytest_settings.repo_password,
-        None,
-        pytest_settings.ssh_key_path,
-        pytest_settings.source_repo_owner,
-        pytest_settings.source_repo_name,
-        True,
-        True,
-        pytest_settings.webhook_secret,
-    )
-
 
 # @pytest.fixture(scope="session")
 def policy_repo_settings(temp_dir: str, session_matrix, opal_network, policy_repo_type = SupportedPolicyRepo.GITHUB):
