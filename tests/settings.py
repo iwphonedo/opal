@@ -177,6 +177,9 @@ class PyTestSessionSettings(List):
                 "skip_rebuild_images": pytest_settings.skip_rebuild_images,
                 "keep_images": pytest_settings.keep_images,
 
+                "number_of_opal_servers": 2,
+                "number_of_opal_clients": 2,
+                "topics": {"topic_1": 1, "topic_2": 1},
             }
 
         print("Finished iterating over PyTestSessionSettings...")

@@ -207,18 +207,18 @@ async def test_policy_and_data_updates(
 
 
 @pytest.mark.parametrize("attempts", [10])  # Number of attempts to repeat the check
-def test_read_statistics(
-    attempts,
-    opal_servers: list[OpalServerContainer],
-    number_of_opal_servers: int,
-    number_of_opal_clients: int,
-):
+def test_read_statistics(attempts, opal_servers: list[OpalServerContainer], session_matrix,):
     """Tests the statistics feature by verifying the number of clients and
     servers."""
 
     logger.info("- Testing statistics feature")
 
-    time.sleep(15)
+
+
+    number_of_opal_servers = session_matrix["number_of_opal_servers"]
+    number_of_opal_clients = session_matrix["number_of_opal_clients"]
+
+    time.sleep(5)
 
     for server in opal_servers:
         logger.info(f"OPAL Server: {server.settings.container_name}:7002")

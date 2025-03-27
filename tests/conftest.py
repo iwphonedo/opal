@@ -97,20 +97,6 @@ def opal_network():
         else:
             logger.error(f"Failed to remove network got exception\n{e}")
 
-@pytest.fixture(scope="session")
-def number_of_opal_servers():
-    """The number of OPAL servers to start.
-
-    This fixture is used to determine how many OPAL servers to start for
-    the tests. The default value is 2, but it can be overridden by setting
-    the environment variable OPAL_TESTS_NUMBER_OF_OPAL_SERVERS.
-
-    Returns:
-        int: The number of OPAL servers to start.
-    """
-    return 2
-
-
 from tests.fixtures.broadcasters import (
     broadcast_channel,
     kafka_broadcast_channel,
@@ -125,9 +111,7 @@ from tests.fixtures.policy_repos import policy_repo
 def opal_servers(
     opal_network: Network,
     policy_repo,
-    number_of_opal_servers: int,
     opal_server_image: str,
-    topics: dict[str, int],
     broadcast_channel: BroadcastContainerBase,
     # kafka_broadcast_channel: KafkaContainer,
     # redis_broadcast_channel: RedisBroadcastContainer,
@@ -167,7 +151,7 @@ def opal_servers(
     containers = []  # List to store container instances
 
 
-    for i in range(number_of_opal_servers):
+    for i in range(session_matrix["number_of_opal_servers"]):
         container_name = f"opal_server_{i+1}"
 
         repo_url = policy_repo.get_repo_url()
@@ -180,7 +164,7 @@ def opal_servers(
                 policy_repo_url=repo_url,
                 image=opal_server_image,
                 log_level="DEBUG",
-                data_topics=" ".join(topics.keys()),
+                data_topics=" ".join(session_matrix["topics"].keys()),
                 polling_interval=3,
                 policy_repo_main_branch=policy_repo.test_branch,
             ),
@@ -208,18 +192,6 @@ def opal_servers(
 
     for container in containers:
         container.stop()
-
-
-@pytest.fixture(scope="session")
-def number_of_opal_clients():
-    """The number of OPAL clients to start.
-
-    This fixture is used to determine how many OPAL clients to start for
-    the tests. The default value is 2, but it can be overridden by
-    setting the environment variable OPAL_TESTS_NUMBER_OF_OPAL_CLIENTS.
-    """
-    return 2
-
 
 @pytest.fixture(scope="session")
 def connected_clients(opal_clients: List[OpalClientContainer]):
@@ -264,7 +236,7 @@ def opal_clients(
     # opa_server: OpaContainer,
     # cedar_server: CedarContainer,
     request,
-    number_of_opal_clients: int,
+    session_matrix,
     opal_client_with_opa_image,
 ):
     """A fixture that starts and manages multiple OPAL client containers.
@@ -303,7 +275,7 @@ def opal_clients(
 
     containers = []  # List to store OpalClientContainer instances
 
-    for i in range(number_of_opal_clients):
+    for i in range(session_matrix["number_of_opal_clients"]):
         container_name = f"opal_client_{i+1}"  # Unique name for each client
 
         client_token = opal_servers[0].obtain_OPAL_tokens(container_name)["client"]
@@ -355,26 +327,8 @@ def opal_clients(
         logger.error(f"Failed to stop containers: {container}")
         pass
 
-
 @pytest.fixture(scope="session")
-def topics():
-    """A fixture that returns a dictionary mapping topic names to the number of
-    OpalClientContainer instances that should subscribe to each topic.
-
-    Returns
-    -------
-    dict
-        A dictionary mapping topic names to the number of OpalClientContainer
-        instances that should subscribe to each topic.
-    """
-    topics = {"topic_1": 1, "topic_2": 1}
-    return topics
-
-
-@pytest.fixture(scope="session")
-def topiced_clients(
-    topics, opal_network: Network, opal_servers: list[OpalServerContainer]
-):
+def topiced_clients(opal_network: Network, opal_servers: list[OpalServerContainer], session_matrix):
     """Fixture that starts and manages multiple OPAL client containers, each
     subscribing to a different topic.
 
@@ -427,7 +381,7 @@ def topiced_clients(
         }
     )
 
-    for topic, number_of_clients in topics.items():
+    for topic, number_of_clients in session_matrix["topics"].items():
         for i in range(number_of_clients):
             container_name = f"opal_client_{topic}_{i+1}"  # Unique name for each client
 
