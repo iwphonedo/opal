@@ -167,6 +167,7 @@ def opal_servers(
                 data_topics=" ".join(session_matrix["topics"].keys()),
                 polling_interval=3,
                 policy_repo_main_branch=policy_repo.test_branch,
+                POLICY_REPO_SSH_KEY=session_matrix["opal_policy_repo_ssh_key_private"],
             ),
             network=opal_network,
         )

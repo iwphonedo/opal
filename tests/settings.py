@@ -74,6 +74,10 @@ class TestSettings:
         self.use_webhook = bool(os.getenv("OPAL_PYTEST_USE_WEBHOOK", True))
         self.wait_for_debugger = bool(os.getenv("OPAL_PYTEST_WAIT_FOR_DEBUGGER", False))
 
+
+        self.opal_policy_repo_ssh_key_private = os.getenv("OPAL_PYTEST_POLICY_REPO_SSH_PRIVATE_KEY", None)
+        self.opal_policy_repo_ssh_key_public = os.getenv("OPAL_PYTEST_POLICY_REPO_SSH_PUBLIC_KEY", None)
+
         # This will fallback to the official permitio images of opal-server and opal-client, you could use it to fallback also opa and cedar
         self.do_not_build_images = bool(os.getenv("OPAL_PYTEST_DO_NOT_BUILD_IMAGES", False))
 
@@ -176,6 +180,9 @@ class PyTestSessionSettings(List):
                 "do_not_build_images": pytest_settings.do_not_build_images,
                 "skip_rebuild_images": pytest_settings.skip_rebuild_images,
                 "keep_images": pytest_settings.keep_images,
+
+                "opal_policy_repo_ssh_key_private": pytest_settings.opal_policy_repo_ssh_key_private,
+                "opal_policy_repo_ssh_key_public": pytest_settings.opal_policy_repo_ssh_key_public,
 
                 "number_of_opal_servers": 2,
                 "number_of_opal_clients": 2,

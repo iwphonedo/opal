@@ -35,7 +35,9 @@ class GithubPolicyRepoSettings:
         source_repo_name: str | None = None,
         ssh_key_path: str | None = None,
         should_fork: bool | None = False,
-        webhook_secret: str | None = None
+        webhook_secret: str | None = None,
+        opal_policy_repo_ssh_key_public: str | None = None,
+        opal_policy_repo_ssh_key_private: str | None = None,
         ):
 
         """
@@ -103,8 +105,9 @@ class GithubPolicyRepoSettings:
         # Set the secret to use for the webhook
         self.webhook_secret = webhook_secret if webhook_secret else self.webhook_secret
 
-        # self.logger.info(f"\n\n\nPolicyRepoSettings: {self.__dict__}\n\n\n")
-        # input()
+        # Set the public and private SSH keys
+        self.opal_policy_repo_ssh_key_public = opal_policy_repo_ssh_key_public
+        self.opal_policy_repo_ssh_key_private = opal_policy_repo_ssh_key_private
 
 
         # Validate the dependencies and load the SSH key
@@ -120,6 +123,6 @@ class GithubPolicyRepoSettings:
         self.webhook_secret: str = os.getenv("OPAL_WEBHOOK_SECRET", "xxxxx")
 
     def validate_dependencies(self):
-        if not self.password and not self.github_pat and not self.ssh_key_path:
+        if not self.password and not self.github_pat and not self.ssh_key_path and not self.opal_policy_repo_ssh_key_private:
             self.logger.error("No password or Github PAT or SSH key provided.")
             raise Exception("No authentication method provided.")

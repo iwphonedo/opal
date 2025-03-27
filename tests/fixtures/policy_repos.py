@@ -89,6 +89,9 @@ def create_github_policy_repo_settings(temp_dir: str, session_matrix):
         should_fork = False,
         # should_fork = session_matrix["should_fork"],
         password = session_matrix["repo_password"],
+
+        opal_policy_repo_ssh_key_public = session_matrix["opal_policy_repo_ssh_key_public"],
+        opal_policy_repo_ssh_key_private = session_matrix["opal_policy_repo_ssh_key_private"],
     )
 
 def create_gitea_policy_repo_settings(temp_dir: str, session_matrix, gitea_settings: GiteaSettings):

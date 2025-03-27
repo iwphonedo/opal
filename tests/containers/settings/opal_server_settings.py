@@ -181,6 +181,7 @@ class OpalServerSettings:
             "OPAL_POLICY_REPO_MAIN_BRANCH": self.policy_repo_main_branch,
             "OPAL_POLICY_REPO_POLLING_INTERVAL": self.polling_interval,
             "OPAL_AUTH_PRIVATE_KEY": self.private_key,
+            "OPAL_AUTH_PRIVATE_KEY_FORMAT": "ssh",
             "OPAL_AUTH_PUBLIC_KEY": self.public_key,
             "OPAL_AUTH_MASTER_TOKEN": self.master_token,
             "OPAL_DATA_CONFIG_SOURCES": f"""{{"config":{{"entries":[{{"url":"http://{self.container_name}:7002/policy-data","topics":["{self.data_topics}"],"dst_path":"/static"}}]}}}}""",
