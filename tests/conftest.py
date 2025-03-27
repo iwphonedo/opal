@@ -429,7 +429,7 @@ def wait_sometime():
 
     if os.getenv("GITHUB_ACTIONS") == "true":
         logger.info("Running inside GitHub Actions. Sleeping for 30 seconds...")
-        time.sleep(3600)  # Sleep for 30 seconds
+        time.sleep(30)  # Sleep for 30 seconds
     else:
         logger.info("Running on the local machine. Press Enter to continue...")
         input()  # Wait for key press
