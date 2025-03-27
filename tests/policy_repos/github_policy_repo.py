@@ -38,6 +38,7 @@ class GithubPolicyRepo(PolicyRepoBase):
             ssh_keys = utils.generate_ssh_key_pair()
             self.ssh_key = ssh_keys["public"]
             self.private_key = ssh_keys["private"]
+            return
 
         try:
             with open(self.settings.ssh_key_path, "r") as ssh_key_file:
