@@ -193,7 +193,7 @@ class OpalServerSettings:
             "UVICORN_PORT": self.uvicorn_port,
             "OPAL_ALL_DATA_URL": self.all_data_url,
             "OPAL_POLICY_REPO_REUSE_CLONE_PATH": self.policy_repo_reuse_clone_path,
-            "OPAL_POLICY_REPO_SSH_KEY": self.POLICY_REPO_SSH_KEY
+            "OPAL_POLICY_REPO_SSH_KEY": self.POLICY_REPO_SSH_KEY,
         }
 
         if pytest_settings.use_webhook:

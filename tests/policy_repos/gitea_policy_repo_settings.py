@@ -1,6 +1,9 @@
 import os
-from tests.policy_repos.supported_policy_repo import SupportedPolicyRepo
+
 from testcontainers.core.utils import setup_logger
+
+from tests.policy_repos.supported_policy_repo import SupportedPolicyRepo
+
 
 class GiteaPolicyRepoSettings:
     def __init__(
@@ -25,9 +28,7 @@ class GiteaPolicyRepoSettings:
         # if False, the an existing repository is expected
         webhook_secret: str | None = None,
     ):
-        
-        """
-        GiteaPolicyRepoSettings initialization.
+        """GiteaPolicyRepoSettings initialization.
 
         This method is used to initialize the Gitea policy repository settings.
         It takes in the following parameters:
@@ -52,7 +53,7 @@ class GiteaPolicyRepoSettings:
         This method sets the following attributes of the Gitea policy repository settings:
         local_clone_path, owner, repo_name, branch_name, repo_host, repo_port_http, repo_port_ssh, password, pat, ssh_key_path, source_repo_owner, source_repo_name, should_fork, should_create_repo, webhook_secret.
         """
-        
+
         self.policy_repo_type = SupportedPolicyRepo.GITEA
 
         self.logger = setup_logger(__name__)
@@ -62,7 +63,9 @@ class GiteaPolicyRepoSettings:
 
         # Set attributes
         self.username = username if username else self.username
-        self.local_clone_path = local_clone_path if local_clone_path else self.local_clone_path
+        self.local_clone_path = (
+            local_clone_path if local_clone_path else self.local_clone_path
+        )
         self.owner = owner if owner else self.owner
         self.repo_name = repo_name if repo_name else self.repo_name
         self.branch_name = branch_name if branch_name else self.branch_name
@@ -73,22 +76,28 @@ class GiteaPolicyRepoSettings:
         self.password = password if password else self.password
         self.pat = pat if pat else self.pat
         self.ssh_key_path = ssh_key_path if ssh_key_path else self.ssh_key_path
-        self.source_repo_owner = source_repo_owner if source_repo_owner else self.source_repo_owner
-        self.source_repo_name = source_repo_name if source_repo_name else self.source_repo_name
+        self.source_repo_owner = (
+            source_repo_owner if source_repo_owner else self.source_repo_owner
+        )
+        self.source_repo_name = (
+            source_repo_name if source_repo_name else self.source_repo_name
+        )
         self.should_fork = should_fork if should_fork else self.should_fork
-        self.should_create_repo = should_create_repo if should_create_repo else self.should_create_repo
+        self.should_create_repo = (
+            should_create_repo if should_create_repo else self.should_create_repo
+        )
         self.webhook_secret = webhook_secret if webhook_secret else self.webhook_secret
 
         self.validate_dependencies()
 
     def load_from_env(self):
-        """
-        Loads environment variables into the Gitea policy repository settings.
+        """Loads environment variables into the Gitea policy repository
+        settings.
 
         This method retrieves various environment variables required for configuring
-        the Gitea policy repository settings and assigns them to the corresponding 
-        attributes of the settings object. It provides flexibility to configure 
-        repository details, authentication credentials, and other configurations 
+        the Gitea policy repository settings and assigns them to the corresponding
+        attributes of the settings object. It provides flexibility to configure
+        repository details, authentication credentials, and other configurations
         through environment variables.
 
         Attributes set by this method:
@@ -114,10 +123,14 @@ class GiteaPolicyRepoSettings:
         self.username = os.getenv("gitea_username", "permitAdmin")
         self.owner = os.getenv("OPAL_TARGET_ACCOUNT", None)
         self.github_pat = os.getenv("OPAL_GITHUB_PAT", None)
-        self.ssh_key_path = os.getenv("OPAL_PYTEST_POLICY_REPO_SSH_KEY_PATH", "~/.ssh/id_rsa")
+        self.ssh_key_path = os.getenv(
+            "OPAL_PYTEST_POLICY_REPO_SSH_KEY_PATH", "~/.ssh/id_rsa"
+        )
         self.repo = os.getenv("OPAL_TARGET_REPO_NAME", "opal-example-policy-repo")
         self.source_repo_owner = os.getenv("OPAL_SOURCE_ACCOUNT", "ariWeinberg")
-        self.source_repo_name = os.getenv("OPAL_SOURCE_REPO_NAME", "opal-example-policy-repo")
+        self.source_repo_name = os.getenv(
+            "OPAL_SOURCE_REPO_NAME", "opal-example-policy-repo"
+        )
         self.webhook_secret: str = os.getenv("OPAL_WEBHOOK_SECRET", "xxxxx")
 
         self.repo_host = os.getenv("OPAL_GITEA_HOST", "127.0.0.1")
@@ -138,10 +151,14 @@ class GiteaPolicyRepoSettings:
         self.local_clone_path = os.getenv("OPAL_GITEA_LOCAL_CLONE_PATH", None)
 
         self.source_repo_owner = os.getenv("OPAL_SOURCE_ACCOUNT", "ariWeinberg")
-        self.source_repo_name = os.getenv("OPAL_SOURCE_REPO_NAME", "opal-example-policy-repo")  
-        
+        self.source_repo_name = os.getenv(
+            "OPAL_SOURCE_REPO_NAME", "opal-example-policy-repo"
+        )
+
     def validate_dependencies(self):
         """Validate required dependencies before starting the server."""
         if not self.local_clone_path:
             raise ValueError("OPAL_GITEA_LOCAL_CLONE_PATH is required.")
-        self.logger.info(f"Gitea policy repo settings | Dependencies validated successfully.")
+        self.logger.info(
+            f"Gitea policy repo settings | Dependencies validated successfully."
+        )

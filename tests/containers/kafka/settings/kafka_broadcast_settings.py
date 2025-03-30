@@ -1,16 +1,16 @@
 import os
+
 from testcontainers.core.utils import setup_logger
+
 
 class KafkaBroadcastSettings:
     def __init__(self, kafka_port: int | None = None):
-
         self.logger = setup_logger("KafkaBroadcastSettings")
 
         self.load_from_env()
 
-
         self.kafka_port = kafka_port if kafka_port else self.kafka_port
-        
+
         self.protocol = "kafka"
 
         self.validate_dependencies()
@@ -19,29 +19,25 @@ class KafkaBroadcastSettings:
         """Validate required dependencies before starting the server."""
         if not self.kafka_port:
             raise ValueError("POSTGRES_PORT is required.")
-        self.logger.info(f"{self.kafka_container_name} | Dependencies validated successfully.")
-
-
+        self.logger.info(
+            f"{self.kafka_container_name} | Dependencies validated successfully."
+        )
 
     def getKafkaUiEnvVars(self):
-        return {
-            "KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS": "kafka:9092"
-        }
+        return {"KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS": "kafka:9092"}
 
     def getZookiperEnvVars(self):
         return {
             "ZOOKEEPER_CLIENT_PORT": self.zookeeper_port,
             "ZOOKEEPER_TICK_TIME": self.zookeeper_tick_time,
-            "ALLOW_ANONYMOUS_LOGIN": self.zookeeper_allow_anonymous_login
+            "ALLOW_ANONYMOUS_LOGIN": self.zookeeper_allow_anonymous_login,
         }
 
     def getKafkaEnvVars(self):
-        return {
-        }
+        return {}
 
     def load_from_env(self):
-        """
-        Load Kafka settings from environment variables.
+        """Load Kafka settings from environment variables.
 
         The following environment variables are supported:
         - KAFKA_IMAGE_NAME

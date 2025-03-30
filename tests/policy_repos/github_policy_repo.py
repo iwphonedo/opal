@@ -22,6 +22,7 @@ class GithubPolicyRepo(PolicyRepoBase):
 
     def create_webhook(self):
         pass
+
     def __init__(
         self,
         settings: GithubPolicyRepoSettings,
@@ -45,7 +46,9 @@ class GithubPolicyRepo(PolicyRepoBase):
         raise Exception("No valid authentication method set")
 
     def get_source_repo_url(self):
-        return self.build_repo_url(self.settings.source_repo_owner, self.settings.source_repo_name)
+        return self.build_repo_url(
+            self.settings.source_repo_owner, self.settings.source_repo_name
+        )
 
     def clone_initial_repo(self):
         Repo.clone_from(self.get_source_repo_url(), self.settings.local_repo_path)
@@ -56,7 +59,9 @@ class GithubPolicyRepo(PolicyRepoBase):
             repo_list = gh.get_user().get_repos()
             for repo in repo_list:
                 if repo.full_name == self.settings.repo:
-                    self.logger.debug(f"Repository {self.settings.repo} already exists.")
+                    self.logger.debug(
+                        f"Repository {self.settings.repo} already exists."
+                    )
                     return True
 
         except Exception as e:
@@ -79,7 +84,9 @@ class GithubPolicyRepo(PolicyRepoBase):
         try:
             if os.path.exists(self.settings.local_repo_path):
                 shutil.rmtree(self.settings.local_repo_path)
-                self.logger.info(f"Local repository at {self.settings.local_repo_path} deleted.")
+                self.logger.info(
+                    f"Local repository at {self.settings.local_repo_path} deleted."
+                )
         except Exception as e:
             self.logger.error(f"Failed to delete local repo path: {e}")
 
@@ -188,6 +195,7 @@ class GithubPolicyRepo(PolicyRepoBase):
             ref = repo.get_git_ref(branch_ref)
             latest_commit = repo.get_git_commit(ref.object.sha)
             from github.InputGitTreeElement import InputGitTreeElement
+
             new_tree = repo.create_git_tree(
                 [
                     InputGitTreeElement(

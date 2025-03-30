@@ -2,8 +2,8 @@ from testcontainers.core.network import Network
 from testcontainers.redis import RedisContainer
 
 from tests.containers.broadcast_container_base import BroadcastContainerBase
-from tests.containers.settings.redis_broadcast_settings import RedisBroadcastSettings
 from tests.containers.permitContainer import PermitContainer
+from tests.containers.settings.redis_broadcast_settings import RedisBroadcastSettings
 
 
 class RedisBroadcastContainer(PermitContainer, RedisContainer):
@@ -14,7 +14,6 @@ class RedisBroadcastContainer(PermitContainer, RedisContainer):
         docker_client_kw: dict | None = None,
         **kwargs,
     ) -> None:
-
         self.settings = redisContainerSettings
 
         self.network = network
@@ -29,6 +28,6 @@ class RedisBroadcastContainer(PermitContainer, RedisContainer):
         self.with_name(self.settings.container_name)
 
         self.start()
-    
+
     def get_url(self) -> str:
         return f"redis://{self.settings.container_name}:{self.settings.port}"

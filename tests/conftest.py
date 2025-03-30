@@ -1,20 +1,39 @@
 import os
-import time
 import shutil
-import pytest
 import tempfile
-from tests import utils
-from testcontainers.core.utils import setup_logger
-from tests.fixtures.opal import opal_clients, opal_servers, opal_network, connected_clients, topiced_clients
-from tests.fixtures.policy_repos import policy_repo
-from tests.fixtures.images import opa_image, cedar_image, opal_client_image, opal_client_with_opa_image, opal_server_image
-from tests.fixtures.broadcasters import broadcast_channel, postgres_broadcast_channel, redis_broadcast_channel, kafka_broadcast_channel
+import time
 
+import pytest
+from testcontainers.core.utils import setup_logger
+
+from tests import utils
+from tests.fixtures.broadcasters import (
+    broadcast_channel,
+    kafka_broadcast_channel,
+    postgres_broadcast_channel,
+    redis_broadcast_channel,
+)
+from tests.fixtures.images import (
+    cedar_image,
+    opa_image,
+    opal_client_image,
+    opal_client_with_opa_image,
+    opal_server_image,
+)
+from tests.fixtures.opal import (
+    connected_clients,
+    opal_clients,
+    opal_network,
+    opal_servers,
+    topiced_clients,
+)
+from tests.fixtures.policy_repos import policy_repo
 
 logger = setup_logger("conftest")
 
 
 utils.pre_set()
+
 
 @pytest.fixture(scope="session")
 def temp_dir():
@@ -34,8 +53,10 @@ def temp_dir():
     path.mkdir(parents=True, exist_ok=True)
     os.chmod(path, 0o777)  # Set permissions to allow read/write/execute for all users
 
-    dir_path = tempfile.mkdtemp(prefix="opal_tests_",suffix=".tmp",dir=str(path))
-    os.chmod(dir_path, 0o777)  # Set permissions to allow read/write/execute for all users
+    dir_path = tempfile.mkdtemp(prefix="opal_tests_", suffix=".tmp", dir=str(path))
+    os.chmod(
+        dir_path, 0o777
+    )  # Set permissions to allow read/write/execute for all users
     logger.debug(f"Temporary directory created: {dir_path}")
     yield dir_path
 
@@ -67,7 +88,6 @@ def setup(opal_clients, policy_repo, session_matrix):
     ------
     None
     """
-    
 
     logger.info("Initializing test session...")
     logger.debug("\n\nusing session matrix:")

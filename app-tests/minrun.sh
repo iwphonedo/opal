@@ -64,7 +64,7 @@ else
   else
     echo "Error creating fork: $?"
   fi
-  
+
   # Update OPAL_POLICY_REPO_URL to point to the forked repo
   OPAL_POLICY_REPO_URL="$FORKED_REPO_URL"
   echo "Updated OPAL_POLICY_REPO_URL to $OPAL_POLICY_REPO_URL"

@@ -6,7 +6,6 @@ from tests import utils
 from tests.containers.permitContainer import PermitContainer
 
 
-
 class RedisUIContainer(PermitContainer, DockerContainer):
     def __init__(
         self,
@@ -15,7 +14,6 @@ class RedisUIContainer(PermitContainer, DockerContainer):
         docker_client_kw: dict | None = None,
         **kwargs,
     ) -> None:
-
         self.redis_container = redis_container
         self.network = network
         self.container_name = f"{self.redis_container.settings.container_name}-ui"

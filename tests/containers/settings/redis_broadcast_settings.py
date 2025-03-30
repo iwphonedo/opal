@@ -1,4 +1,5 @@
 import os
+
 from testcontainers.core.utils import setup_logger
 
 
@@ -9,7 +10,6 @@ class RedisBroadcastSettings:
         port: int | None = None,
         password: str | None = None,
     ):
-        
         self.logger = setup_logger("PostgresBroadcastSettings")
 
         self.load_from_env()
@@ -27,13 +27,14 @@ class RedisBroadcastSettings:
             raise ValueError("POSTGRES_PORT is required.")
         if not self.password:
             raise ValueError("POSTGRES_PASSWORD is required.")
-        
-        self.logger.info(f"{self.container_name} | Dependencies validated successfully.")
 
-
+        self.logger.info(
+            f"{self.container_name} | Dependencies validated successfully."
+        )
 
     def load_from_env(self):
-        self.container_name = os.getenv("REDIS_CONTAINER_NAME", "redis_broadcast_channel")
+        self.container_name = os.getenv(
+            "REDIS_CONTAINER_NAME", "redis_broadcast_channel"
+        )
         self.port = int(os.getenv("REDIS_PORT", 6379))
         self.password = os.getenv("REDIS_PASSWORD", "redis")
-

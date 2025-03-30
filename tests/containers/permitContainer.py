@@ -10,7 +10,9 @@ class PermitContainer:
         self.permitLogger = setup_logger(__name__)
 
         # Regex to match any ANSI-escaped timestamp in the format YYYY-MM-DDTHH:MM:SS.mmmmmm+0000
-        self.timestamp_with_ansi = (r"\x1b\[.*?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}\+\d{4})")
+        self.timestamp_with_ansi = (
+            r"\x1b\[.*?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}\+\d{4})"
+        )
         self.errors = []
         # self.check_errors()
 
@@ -38,14 +40,16 @@ class PermitContainer:
             # Check if the timeout has been exceeded
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
-                self.permitLogger.warning(f"{self.settings.container_name} | Timeout reached while waiting for the log. | {log_str}")
+                self.permitLogger.warning(
+                    f"{self.settings.container_name} | Timeout reached while waiting for the log. | {log_str}"
+                )
                 break
 
             decoded_line = line.decode("utf-8").strip()
 
             # Search for the timestamp in the line
             match = re.search(self.timestamp_with_ansi, decoded_line)
-            if (reference_timestamp is None):
+            if reference_timestamp is None:
                 if log_str in decoded_line:
                     log_found = True
                     break

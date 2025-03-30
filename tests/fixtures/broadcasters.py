@@ -4,16 +4,17 @@ from testcontainers.core.utils import setup_logger
 
 from tests.containers.kafka.kafka_broadcast_container import KafkaContainer
 from tests.containers.kafka.kafka_ui_container import KafkaUIContainer
+from tests.containers.kafka.settings.kafka_broadcast_settings import (
+    KafkaBroadcastSettings,
+)
+from tests.containers.kafka.zookeeper_container import ZookeeperContainer
 from tests.containers.postgres_broadcast_container import PostgresBroadcastContainer
 from tests.containers.redis_broadcast_container import RedisBroadcastContainer
 from tests.containers.redis_ui_container import RedisUIContainer
-from tests.containers.kafka.settings.kafka_broadcast_settings import KafkaBroadcastSettings
 from tests.containers.settings.postgres_broadcast_settings import (
     PostgresBroadcastSettings,
 )
 from tests.containers.settings.redis_broadcast_settings import RedisBroadcastSettings
-from tests.containers.kafka.zookeeper_container import ZookeeperContainer
-
 from tests.settings import session_matrix
 
 logger = setup_logger(__name__)
@@ -30,8 +31,7 @@ def postgres_broadcast_channel(opal_network: Network):
     try:
         try:
             container = PostgresBroadcastContainer(
-                network=opal_network,
-                settings=PostgresBroadcastSettings()
+                network=opal_network, settings=PostgresBroadcastSettings()
             )
             yield [container]
         except Exception as e:
@@ -39,12 +39,17 @@ def postgres_broadcast_channel(opal_network: Network):
                 f"Failed to start container: {container} with error: {e} {e.__traceback__}"
             )
             exit(1)
-        
+
         try:
-            if container.get_wrapped_container().status == "running" or container.get_wrapped_container().status == "created":
+            if (
+                container.get_wrapped_container().status == "running"
+                or container.get_wrapped_container().status == "created"
+            ):
                 container.stop()
             else:
-                logger.info(f"Container status is: {container.get_wrapped_container().status}")
+                logger.info(
+                    f"Container status is: {container.get_wrapped_container().status}"
+                )
                 container.stop()
         except Exception:
             logger.error(f"Failed to stop containers: {container}")
@@ -91,7 +96,9 @@ def redis_broadcast_channel(opal_network: Network):
     container. The yield value is a list of the two containers. The
     fixture stops the containers after the test is done.
     """
-    redis_container = RedisBroadcastContainer(opal_network, redisContainerSettings=RedisBroadcastSettings())
+    redis_container = RedisBroadcastContainer(
+        opal_network, redisContainerSettings=RedisBroadcastSettings()
+    )
     redis_ui_container = RedisUIContainer(opal_network, redis_container)
     containers = [redis_container, redis_ui_container]
     yield containers
@@ -107,8 +114,9 @@ def redis_broadcast_channel(opal_network: Network):
 broadcasters_map = {
     "postgres": postgres_broadcast_channel,
     "kafka": kafka_broadcast_channel,
-    "redis": redis_broadcast_channel
+    "redis": redis_broadcast_channel,
 }
+
 
 @pytest.fixture(scope="session")
 def broadcast_channel(opal_network: Network, session_matrix):

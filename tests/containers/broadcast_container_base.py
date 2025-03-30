@@ -6,8 +6,6 @@ class BroadcastContainerBase(PermitContainer):
         PermitContainer.__init__(self)
 
     def get_url(self) -> str:
-
-
         url = ""
 
         match self.settings.protocol:
@@ -45,7 +43,7 @@ class BroadcastContainerBase(PermitContainer):
                 )
                 print(url)
                 return url
-            
+
             case _:
                 raise ValueError(f"Unknown broadcast container type: {self.settings}")
         print(url)

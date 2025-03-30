@@ -2,9 +2,9 @@ from testcontainers.core.generic import DockerContainer
 from testcontainers.core.network import Network
 from testcontainers.core.utils import setup_logger
 
+from tests.containers.OPA.OPA_settings import OpaSettings
 from tests.containers.permitContainer import PermitContainer
 
-from tests.containers.OPA.OPA_settings import OpaSettings
 
 class OpaContainer(PermitContainer, DockerContainer):
     def __init__(

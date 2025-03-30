@@ -243,7 +243,6 @@ class OpalClientSettings:
         else:
             env_vars["OPAL_INLINE_OPA_ENABLED"] = self.inline_opa_enabled
 
-
         if self.iniline_cedar_enabled:
             env_vars["OPAL_INILINE_CEDAR_ENABLED"] = self.iniline_cedar_enabled
             env_vars["OPAL_INILINE_CEDAR_EXEC_PATH"] = self.inline_cedar_exec_path

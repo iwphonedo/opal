@@ -57,86 +57,92 @@ def gitea_server(opal_network: Network):
     """
 
     gitea_container = GiteaContainer(settings=gitea_settings(), network=opal_network)
-    
+
     gitea_container.deploy_gitea()
     gitea_container.init_repo()
-    
+
     yield gitea_container
+
 
 def create_github_policy_repo_settings(temp_dir: str, session_matrix):
     # logger.info("Creating GithubPolicyRepoSettings...")
     # logger.info("\n\n\n\n")
     # logger.info(session_matrix)
     # logger.info("\n\n\n\n")
-   
+
     # input()
 
-
     return GithubPolicyRepoSettings(
-        temp_dir = temp_dir,
-        local_clone_path = temp_dir,
-
-        source_repo_owner = session_matrix["source_repo_owner"],
-        source_repo_name = session_matrix["source_repo_name"],
-        repo_name = session_matrix["repo_name"],
-        owner = session_matrix["repo_owner"],
-        
-        ssh_key_path = session_matrix["ssh_key_path"],
-        
-        pat = session_matrix["github_pat"],
-
-        webhook_secret = session_matrix["webhook_secret"],
-        should_fork = False,
+        temp_dir=temp_dir,
+        local_clone_path=temp_dir,
+        source_repo_owner=session_matrix["source_repo_owner"],
+        source_repo_name=session_matrix["source_repo_name"],
+        repo_name=session_matrix["repo_name"],
+        owner=session_matrix["repo_owner"],
+        ssh_key_path=session_matrix["ssh_key_path"],
+        pat=session_matrix["github_pat"],
+        webhook_secret=session_matrix["webhook_secret"],
+        should_fork=False,
         # should_fork = session_matrix["should_fork"],
-        password = session_matrix["repo_password"],
-
-        opal_policy_repo_ssh_key_public = session_matrix["opal_policy_repo_ssh_key_public"],
-        opal_policy_repo_ssh_key_private = session_matrix["opal_policy_repo_ssh_key_private"],
+        password=session_matrix["repo_password"],
+        opal_policy_repo_ssh_key_public=session_matrix[
+            "opal_policy_repo_ssh_key_public"
+        ],
+        opal_policy_repo_ssh_key_private=session_matrix[
+            "opal_policy_repo_ssh_key_private"
+        ],
     )
 
-def create_gitea_policy_repo_settings(temp_dir: str, session_matrix, gitea_settings: GiteaSettings):
 
-    """
-    Creates a Gitea policy repository settings object.
+def create_gitea_policy_repo_settings(
+    temp_dir: str, session_matrix, gitea_settings: GiteaSettings
+):
+    """Creates a Gitea policy repository settings object.
 
-    This method creates a Gitea policy repository settings object based on the
-    given parameters. The object is initialized with the default values for
-    the local clone path, owner, repository name, branch name, container name,
-    repository host, repository ports, password, SSH key path, source
-    repository owner and name, whether to fork the repository, whether to
-    create the repository, and webhook secret.
+    This method creates a Gitea policy repository settings object based
+    on the given parameters. The object is initialized with the default
+    values for the local clone path, owner, repository name, branch
+    name, container name, repository host, repository ports, password,
+    SSH key path, source repository owner and name, whether to fork the
+    repository, whether to create the repository, and webhook secret.
 
-    :param temp_dir: The temporary directory to use for the policy repository.
-    :param session_matrix: The session matrix to use for the policy repository.
+    :param temp_dir: The temporary directory to use for the policy
+        repository.
+    :param session_matrix: The session matrix to use for the policy
+        repository.
     :param gitea_settings: The settings for the Gitea container.
     :return: The GiteaPolicyRepoSettings object.
     """
-    
+
     return GiteaPolicyRepoSettings(
-        local_clone_path = temp_dir,
-        owner = gitea_settings.username,
-        repo_name = gitea_settings.repo_name,
-        branch_name = "master",
-        container_name = gitea_settings.container_name,
-        repo_host = "localhost",
-        repo_port_http = gitea_settings.port_http,
-        repo_port_ssh = gitea_settings.port_ssh,
-        password = gitea_settings.password,
-        pat = None,
-        ssh_key_path = pytest_settings.ssh_key_path,
-        source_repo_owner = gitea_settings.username,
-        source_repo_name = gitea_settings.repo_name,
-        should_fork = False,
-        should_create_repo = True,
-        webhook_secret = pytest_settings.webhook_secret
+        local_clone_path=temp_dir,
+        owner=gitea_settings.username,
+        repo_name=gitea_settings.repo_name,
+        branch_name="master",
+        container_name=gitea_settings.container_name,
+        repo_host="localhost",
+        repo_port_http=gitea_settings.port_http,
+        repo_port_ssh=gitea_settings.port_ssh,
+        password=gitea_settings.password,
+        pat=None,
+        ssh_key_path=pytest_settings.ssh_key_path,
+        source_repo_owner=gitea_settings.username,
+        source_repo_name=gitea_settings.repo_name,
+        should_fork=False,
+        should_create_repo=True,
+        webhook_secret=pytest_settings.webhook_secret,
     )
 
 
 # @pytest.fixture(scope="session")
-def policy_repo_settings(temp_dir: str, session_matrix, opal_network, policy_repo_type = SupportedPolicyRepo.GITHUB):
-
-    """
-    Creates a policy repository settings object based on the specified type of policy repository.
+def policy_repo_settings(
+    temp_dir: str,
+    session_matrix,
+    opal_network,
+    policy_repo_type=SupportedPolicyRepo.GITHUB,
+):
+    """Creates a policy repository settings object based on the specified type
+    of policy repository.
 
     This method takes in the following parameters:
 
@@ -153,13 +159,15 @@ def policy_repo_settings(temp_dir: str, session_matrix, opal_network, policy_rep
         # gitea_server = request.getfixturevalue("gitea_server")
         gitea_server_settings = next(gitea_server(opal_network))
 
-
     map = {
         SupportedPolicyRepo.GITHUB: create_github_policy_repo_settings,
-        SupportedPolicyRepo.GITEA: lambda temp_dir, session_matrix: create_gitea_policy_repo_settings(temp_dir, session_matrix, gitea_server_settings.settings),
+        SupportedPolicyRepo.GITEA: lambda temp_dir, session_matrix: create_gitea_policy_repo_settings(
+            temp_dir, session_matrix, gitea_server_settings.settings
+        ),
     }
 
     yield (map[policy_repo_type](temp_dir, session_matrix), gitea_server_settings)
+
 
 @pytest.fixture(scope="session")
 def policy_repo(temp_dir: str, session_matrix, opal_network, request):
@@ -180,8 +188,12 @@ def policy_repo(temp_dir: str, session_matrix, opal_network, request):
     :return: The PolicyRepoBase object.
     """
 
-    settings, server = next(policy_repo_settings(temp_dir, session_matrix, opal_network, session_matrix["repo_provider"]))
-    
+    settings, server = next(
+        policy_repo_settings(
+            temp_dir, session_matrix, opal_network, session_matrix["repo_provider"]
+        )
+    )
+
     policy_repo = PolicyRepoFactory(
         session_matrix["repo_provider"],
     ).get_policy_repo(

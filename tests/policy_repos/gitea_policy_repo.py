@@ -3,13 +3,12 @@ import os
 import shutil
 
 from git import GitCommandError, Repo
+from testcontainers.core.utils import setup_logger
 
 from tests.containers.settings.gitea_settings import GiteaSettings
 from tests.policy_repos.gitea_policy_repo_settings import GiteaPolicyRepoSettings
 from tests.policy_repos.policy_repo_base import PolicyRepoBase
 from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
-
-from testcontainers.core.utils import setup_logger
 
 
 class GiteaPolicyRepo(PolicyRepoBase):

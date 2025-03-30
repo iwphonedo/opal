@@ -107,7 +107,6 @@ def update_policy(
     utils.wait_policy_repo_polling_interval(opal_server_container)
 
 
-
 def test_topiced_user_location(
     opal_servers: list[OpalServerContainer],
     topiced_clients: dict[str, OpalClientContainer],
@@ -207,13 +206,15 @@ async def test_policy_and_data_updates(
 
 
 @pytest.mark.parametrize("attempts", [10])  # Number of attempts to repeat the check
-def test_read_statistics(attempts, opal_servers: list[OpalServerContainer], session_matrix,):
+def test_read_statistics(
+    attempts,
+    opal_servers: list[OpalServerContainer],
+    session_matrix,
+):
     """Tests the statistics feature by verifying the number of clients and
     servers."""
 
     logger.info("- Testing statistics feature")
-
-
 
     number_of_opal_servers = session_matrix["number_of_opal_servers"]
     number_of_opal_clients = session_matrix["number_of_opal_clients"]
@@ -270,7 +271,9 @@ def test_read_statistics(attempts, opal_servers: list[OpalServerContainer], sess
 
             except requests.RequestException as e:
                 if response is not None:
-                    logger.error(f"Request failed: {response.status_code} {response.text}")
+                    logger.error(
+                        f"Request failed: {response.status_code} {response.text}"
+                    )
                 pytest.fail(f"Failed to fetch statistics: {e}")
 
     logger.info("Statistics check passed in all attempts.")

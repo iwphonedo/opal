@@ -1,19 +1,20 @@
-from testcontainers.core.network import Network
 import json
+import time
+from typing import List
+
+import pytest
+from testcontainers.core.network import Network
+from testcontainers.core.utils import setup_logger
+
 from tests.containers.broadcast_container_base import BroadcastContainerBase
 from tests.containers.opal_client_container import OpalClientContainer
-from typing import List
 from tests.containers.opal_server_container import OpalServerContainer
 from tests.containers.settings.opal_client_settings import OpalClientSettings
 from tests.containers.settings.opal_server_settings import OpalServerSettings
 from tests.policy_repos.policy_repo_base import PolicyRepoBase
-import time
-from testcontainers.core.utils import setup_logger
-import pytest
-
-
 
 logger = setup_logger("opal_fixtures")
+
 
 @pytest.fixture(scope="session", autouse=True)
 def opal_network():
@@ -35,6 +36,7 @@ def opal_network():
             logger.error(f"Failed to remove network: {e}")
         else:
             logger.error(f"Failed to remove network got exception\n{e}")
+
 
 from tests.fixtures.broadcasters import (
     broadcast_channel,
@@ -89,7 +91,6 @@ def opal_servers(
 
     containers = []  # List to store container instances
 
-
     for i in range(session_matrix["number_of_opal_servers"]):
         container_name = f"opal_server_{i+1}"
 
@@ -132,6 +133,7 @@ def opal_servers(
 
     for container in containers:
         container.stop()
+
 
 @pytest.fixture(scope="session")
 def connected_clients(opal_clients: List[OpalClientContainer]):
@@ -211,7 +213,7 @@ def opal_clients(
     if not opal_servers or len(opal_servers) == 0:
         raise ValueError("Missing 'opal_server' container.")
 
-    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"#{opal_servers[0].settings.port}"
+    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"  # {opal_servers[0].settings.port}"
 
     containers = []  # List to store OpalClientContainer instances
 
@@ -267,8 +269,11 @@ def opal_clients(
         logger.error(f"Failed to stop containers: {container}")
         pass
 
+
 @pytest.fixture(scope="session")
-def topiced_clients(opal_network: Network, opal_servers: list[OpalServerContainer], session_matrix):
+def topiced_clients(
+    opal_network: Network, opal_servers: list[OpalServerContainer], session_matrix
+):
     """Fixture that starts and manages multiple OPAL client containers, each
     subscribing to a different topic.
 
@@ -297,7 +302,7 @@ def topiced_clients(opal_network: Network, opal_servers: list[OpalServerContaine
     if not opal_servers or len(opal_servers) == 0:
         raise ValueError("Missing 'opal_server' container.")
 
-    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"#{opal_servers[0].settings.port}"
+    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"  # {opal_servers[0].settings.port}"
     containers = {}  # List to store OpalClientContainer instances
 
     client_token = opal_servers[0].obtain_OPAL_tokens("topiced_opal_client_?x?")[
@@ -355,4 +360,3 @@ def topiced_clients(opal_network: Network, opal_servers: list[OpalServerContaine
     for _, clients in containers.items():
         for client in clients:
             client.stop()
-

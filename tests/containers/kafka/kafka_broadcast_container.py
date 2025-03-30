@@ -1,9 +1,10 @@
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.network import Network
 
+
 class KafkaContainer(DockerContainer):
     def __init__(self, network: Network):
-            # Kafka Broker 0
+        # Kafka Broker 0
         self.settings = {
             "env": {
                 "KAFKA_BROKER_ID": "1",
@@ -21,13 +22,12 @@ class KafkaContainer(DockerContainer):
         self.with_exposed_ports(9092, 29092)
         for key, value in self.settings.get("env").items():
             self.with_env(key, value)
-        
+
         self.with_name("kafka0")
         self.with_network(network)
         self.with_network_aliases("kafka0")
 
         self.start()
-
 
     def get_url(self) -> str:
         url = "kafka://kafka0:9092"

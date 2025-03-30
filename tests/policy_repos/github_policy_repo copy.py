@@ -33,7 +33,7 @@
 #             self.ssh_key = self.settings.opal_policy_repo_ssh_key_public
 #             self.private_key = self.settings.opal_policy_repo_ssh_key_private
 #             return
-        
+
 #         if self.settings.ssh_key_path.startswith("~"):
 #             self.settings.ssh_key_path = os.path.expanduser(self.settings.ssh_key_path)
 

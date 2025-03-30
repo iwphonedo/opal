@@ -18,4 +18,3 @@ class KafkaUIContainer(DockerContainer):
         self.with_network_aliases("kafka-ui")
 
         self.start()
-     

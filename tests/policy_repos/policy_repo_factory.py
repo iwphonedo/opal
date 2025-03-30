@@ -4,12 +4,13 @@ from enum import Enum
 
 from testcontainers.core.utils import setup_logger
 
-from tests.policy_repos.supported_policy_repo import SupportedPolicyRepo
 from tests.policy_repos.gitea_policy_repo import GiteaPolicyRepo
 from tests.policy_repos.github_policy_repo import GithubPolicyRepo
 from tests.policy_repos.gitlab_policy_repo import GitlabPolicyRepo
 from tests.policy_repos.policy_repo_base import PolicyRepoBase
 from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
+from tests.policy_repos.supported_policy_repo import SupportedPolicyRepo
+
 
 # Factory class to create a policy repository object based on the type of policy repository.
 class PolicyRepoFactory:
