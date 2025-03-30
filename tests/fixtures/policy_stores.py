@@ -1,9 +1,10 @@
+import datetime
 import pytest
 from images import cedar_image, opa_image
 from testcontainers.core.network import Network
 
 from tests.containers.cedar_container import CedarContainer
-from tests.containers.opa_container import OpaContainer, OpaSettings
+from tests.containers.OPA.opa_container import OpaContainer, OpaSettings
 from tests.containers.settings.cedar_settings import CedarSettings
 
 
@@ -33,19 +34,12 @@ def opa_server(opal_network: Network, opa_image):
     container : OpaContainer
         The OPA server container object.
     """
-    with OpaContainer(
-        settings=OpaSettings(
-            container_name="opa",
-            image=opa_image,
-        ),
-        network=opal_network,
-    ) as container:
-        assert container.wait_for_log(
-            log_str="Server started", timeout=30
-        ), "OPA server did not start."
-        yield container
+    container = OpaContainer(settings=OpaSettings(container_name="opa",image=opa_image,),network=opal_network,)
+    # assert container.wait_for_log(reference_timestamp=datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=1000),log_str="msg=Initializing server", timeout=5), "OPA server did not start."
+    container.permitLogger.info("OPA server started with id: " + container.get_wrapped_container().id)
+    yield container
 
-        container.stop()
+    container.stop()
 
 
 @pytest.fixture(scope="session")

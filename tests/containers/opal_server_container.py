@@ -32,6 +32,7 @@ class OpalServerContainer(PermitContainer, DockerContainer):
         for key, value in self.settings.getEnvVars().items():
             self.with_env(key, value)
 
+
         # Configure network and other settings
         self.with_name(self.settings.container_name).with_bind_ports(
             7002, self.settings.port
