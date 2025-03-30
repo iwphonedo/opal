@@ -96,7 +96,7 @@ WORKDIR /opal
 
 # copy opa from official docker image
 ARG opa_image=openpolicyagent/opa
-ARG opa_tag=latest-static
+ARG opa_tag=0.70.0-static
 RUN skopeo copy "docker://${opa_image}:${opa_tag}" docker-archive:./image.tar && \
   mkdir image && tar xf image.tar -C ./image && cat image/*.tar | tar xf - -C ./image -i && \
   find image/ -name "opa*" -type f -executable -print0 | xargs -0 -I "{}" cp {} ./opa && chmod 755 ./opa && \
@@ -126,13 +126,18 @@ USER opal
 # CEDAR CLIENT IMAGE --------------------------------
 # Using standalone image as base --------------------
 # ---------------------------------------------------
+# Extract the Cedar Agent binary from the existing image
+# CEDAR AGENT DOWNLOAD STAGE -----------------------
+# Stage to locate and extract the cedar-agent binary
+FROM permitio/cedar-agent:0.2.0 AS cedar-extractor
+
 FROM client-standalone AS client-cedar
 
 # Temporarily move back to root for additional setup
 USER root
 
-# Copy cedar from its build stage
-COPY --from=cedar-builder /tmp/cedar-agent/target/*/cedar-agent /bin/cedar-agent
+COPY --from=cedar-extractor /agent/cedar-agent /bin/cedar-agent
+RUN chmod +x /bin/cedar-agent
 
 # enable inline Cedar agent
 ENV OPAL_POLICY_STORE_TYPE=CEDAR
