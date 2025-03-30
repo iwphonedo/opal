@@ -311,3 +311,10 @@ async def test_policy_update(
         assert (
             log_found
         ), f"Expected log entry not found in client '{client.settings.container_name}' after the reference timestamp."
+
+
+
+def test_dummy_test(setup):
+    """Dummy test to ensure pytest runs."""
+    print("Dummy test running...")
+    return
