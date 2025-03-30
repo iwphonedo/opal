@@ -40,3 +40,4 @@ class PostgresBroadcastContainer(BroadcastContainerBase, PostgresContainer):
 
         self.with_network_aliases("broadcast_channel")
         self.with_name(f"postgres_broadcast_channel")
+        self.start()

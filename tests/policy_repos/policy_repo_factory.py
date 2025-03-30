@@ -9,14 +9,7 @@ from tests.policy_repos.github_policy_repo import GithubPolicyRepo
 from tests.policy_repos.gitlab_policy_repo import GitlabPolicyRepo
 from tests.policy_repos.policy_repo_base import PolicyRepoBase
 from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
-
-
-class SupportedPolicyRepo(Enum):
-    GITEA = "Gitea"
-    GITHUB = "Github"
-    GITLAB = "Gitlab"
-    # BITBUCKET = "Bitbucket"
-    # AZURE_DEVOPS = "AzureDevOps"
+from tests.policy_repos.supported_policy_repo import SupportedPolicyRepo
 
 
 # Factory class to create a policy repository object based on the type of policy repository.
@@ -31,14 +24,20 @@ class PolicyRepoFactory:
 
     def get_policy_repo(
         self,
-        settings: PolicyRepoSettings,
+        settings,
         logger: logging.Logger = setup_logger(__name__),
-    ) -> PolicyRepoBase:
+    ) -> GithubPolicyRepo | GiteaPolicyRepo:
         factory = {
             SupportedPolicyRepo.GITEA: GiteaPolicyRepo,
             SupportedPolicyRepo.GITHUB: GithubPolicyRepo,
             SupportedPolicyRepo.GITLAB: GitlabPolicyRepo,
         }
+
+        assert settings is not None, "Settings must be provided"
+        assert settings.policy_repo_type == self.policy_repo, (
+            f"Settings policy_repo_type must be {self.policy_repo}, "
+            f"but got {settings.policy_repo_type}"
+        )
 
         return factory[SupportedPolicyRepo(self.policy_repo)](settings)
 

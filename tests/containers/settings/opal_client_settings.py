@@ -222,6 +222,7 @@ class OpalClientSettings:
             "UVICORN_NUM_WORKERS": "1",
             "UVICORN_PORT": str(self.port),
             "OPAL_AUTH_PUBLIC_KEY": self.public_key,
+            # "POLICY_STORE_TYPE": "OPA",
         }
 
         if self.tests_debug:
@@ -239,6 +240,8 @@ class OpalClientSettings:
             env_vars["OPAL_INLINE_OPA_EXEC_PATH"] = self.inline_opa_exec_path
             env_vars["OPAL_INLINE_OPA_CONFIG"] = self.inline_opa_config
             env_vars["OPAL_INLINE_OPA_LOG_FORMAT"] = self.inline_opa_log_format
+        else:
+            env_vars["OPAL_INLINE_OPA_ENABLED"] = self.inline_opa_enabled
 
         if self.iniline_cedar_enabled:
             env_vars["OPAL_INILINE_CEDAR_ENABLED"] = self.iniline_cedar_enabled

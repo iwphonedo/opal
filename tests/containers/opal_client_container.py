@@ -26,7 +26,13 @@ class OpalClientContainer(PermitContainer, DockerContainer):
 
     def configure(self):
         for key, value in self.settings.getEnvVars().items():
+            if key == "INLINE_OPA_ENABLED":
+                self.with_env(key, True)
+                continue
             self.with_env(key, value)
+
+        self.with_env("INLINE_OPA_ENABLED", True)
+        self.with_env("OPAL_INLINE_OPA_ENABLED", True)
 
         self.with_name(self.settings.container_name).with_bind_ports(
             7000, self.settings.port
