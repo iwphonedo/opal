@@ -18,7 +18,7 @@ from tests.policy_repos.policy_repo_factory import (
 from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
 from tests.settings import pytest_settings
 
-logger = setup_logger(__name__)
+logger = setup_logger("policy_repos")
 
 
 # @pytest.fixture(scope="session")
