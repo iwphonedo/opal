@@ -460,6 +460,17 @@ def setup(opal_clients, policy_repo, session_matrix):
     ------
     None
     """
+    
+
+    logger.info("\n\nInitializing test session...\n\n")
+
+    for key, val in session_matrix.items():
+        logger.info(f"{key}: {val}")
+
+    logger.info("\n\nLoading environment variables...\n\n")
+    for key, val in os.environ.items():
+        logger.debug(f"{key}: {val}")
+
     yield
     policy_repo.cleanup(delete_ssh_key=False)
     if session_matrix["is_final"]:

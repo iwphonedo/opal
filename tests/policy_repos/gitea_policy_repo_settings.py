@@ -116,7 +116,7 @@ class GiteaPolicyRepoSettings:
         self.github_pat = os.getenv("OPAL_GITHUB_PAT", None)
         self.ssh_key_path = os.getenv("OPAL_PYTEST_POLICY_REPO_SSH_KEY_PATH", "~/.ssh/id_rsa")
         self.repo = os.getenv("OPAL_TARGET_REPO_NAME", "opal-example-policy-repo")
-        self.source_repo_owner = os.getenv("OPAL_SOURCE_ACCOUNT", "permitio")
+        self.source_repo_owner = os.getenv("OPAL_SOURCE_ACCOUNT", "ariWeinberg")
         self.source_repo_name = os.getenv("OPAL_SOURCE_REPO_NAME", "opal-example-policy-repo")
         self.webhook_secret: str = os.getenv("OPAL_WEBHOOK_SECRET", "xxxxx")
 
@@ -137,7 +137,7 @@ class GiteaPolicyRepoSettings:
 
         self.local_clone_path = os.getenv("OPAL_GITEA_LOCAL_CLONE_PATH", None)
 
-        self.source_repo_owner = os.getenv("OPAL_SOURCE_ACCOUNT", "permitio")
+        self.source_repo_owner = os.getenv("OPAL_SOURCE_ACCOUNT", "ariWeinberg")
         self.source_repo_name = os.getenv("OPAL_SOURCE_REPO_NAME", "opal-example-policy-repo")  
         
     def validate_dependencies(self):

@@ -67,7 +67,7 @@ class TestSettings:
         self.repo_password = os.getenv("OPAL_PYTEST_REPO_PASSWORD")
         self.github_pat = os.getenv("OPAL_PYTEST_GITHUB_PAT")
         self.ssh_key_path = os.getenv("OPAL_PYTEST_SSH_KEY_PATH")
-        self.source_repo_owner = os.getenv("OPAL_PYTEST_SOURCE_ACCOUNT", "permitio")
+        self.source_repo_owner = os.getenv("OPAL_PYTEST_SOURCE_ACCOUNT", "ariWeinberg")
         self.source_repo_name = os.getenv("OPAL_PYTEST_SOURCE_REPO", "opal-example-policy-repo")
         self.webhook_secret = os.getenv("OPAL_PYTEST_WEBHOOK_SECRET", "xxxxx")
         self.should_fork = bool(os.getenv("OPAL_PYTEST_SHOULD_FORK", True))
