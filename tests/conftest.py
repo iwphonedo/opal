@@ -468,7 +468,7 @@ def setup(opal_clients, policy_repo, session_matrix):
         logger.info(f"{key}: {val}")
 
     yield
-    policy_repo.cleanup(delete_ssh_key=False)
+    policy_repo.cleanup()
     if session_matrix["is_final"]:
         logger.info("Finalizing test session...")
         utils.remove_env("OPAL_TESTS_DEBUG")

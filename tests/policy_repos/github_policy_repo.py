@@ -17,6 +17,11 @@ from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
 
 
 class GithubPolicyRepo(PolicyRepoBase):
+    def setup_webhook(self, host, port):
+        pass
+
+    def create_webhook(self):
+        pass
     def __init__(
         self,
         settings: GithubPolicyRepoSettings,
@@ -32,9 +37,10 @@ class GithubPolicyRepo(PolicyRepoBase):
         if owner is None:
             raise Exception("Owner not set")
 
-        if self.settings.protocol in ("http", "https"):
-            if self.settings.github_pat:
-                return f"{self.settings.protocol}://{self.settings.owner}:{self.settings.github_pat}@{self.settings.host}/{owner}/{repo}.git"
+        protocol = "https"
+        pat = self.settings.github_pat
+        if pat:
+            return f"{protocol}://{pat}@{self.settings.host}/{owner}/{repo}.git"
 
         raise Exception("No valid authentication method set")
 
@@ -87,11 +93,6 @@ class GithubPolicyRepo(PolicyRepoBase):
                 self.delete_repo()
             except Exception as e:
                 self.logger.error(f"Failed to delete remote repo: {e}")
-
-        self.delete_test_branches()
-
-        if delete_repo:
-            self.delete_repo()
 
     def delete_test_branches(self):
         try:
@@ -162,8 +163,8 @@ class GithubPolicyRepo(PolicyRepoBase):
             self.logger.error(f"Error deleting repository: {e}")
 
     def setup(self):
-        self.clone_initial_repo()
         self.create_target_repo()
+        self.clone_initial_repo()
         self.generate_test_branch()
         self.create_test_branch()
 
