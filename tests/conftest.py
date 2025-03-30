@@ -439,7 +439,7 @@ def wait_sometime():
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup(session_matrix, policy_repo):
+def setup(opal_clients, policy_repo, session_matrix):
     """A setup fixture that is run once per test session.
 
     This fixture is automatically used by all tests, and is used to set up the
@@ -462,18 +462,10 @@ def setup(session_matrix, policy_repo):
     """
     
 
-    logger.info("\n\nInitializing test session...\n\n")
+    logger.info("Initializing test session...")
 
     for key, val in session_matrix.items():
         logger.info(f"{key}: {val}")
-
-    logger.info("\n\nLoading environment variables...\n\n")
-    import dotenv
-
-    dotenv.load_dotenv()
-    
-    for key, val in os.environ.items():
-        logger.debug(f"{key}: {val}")
 
     yield
     policy_repo.cleanup(delete_ssh_key=False)
