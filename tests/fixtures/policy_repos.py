@@ -180,6 +180,13 @@ def policy_repo(temp_dir: str, session_matrix, opal_network, request) -> GithubP
     :return: The PolicyRepoBase object.
     """
 
+    logger.info("Creating policy repo...")
+    logger.info("\n\nusing session matrix:")
+    for key in session_matrix:
+        logger.info(f"{key}: {session_matrix[key]}")
+    logger.info("\n\n")
+
+
     settings, server = next(policy_repo_settings(temp_dir, session_matrix, opal_network, session_matrix["repo_provider"]))
     
     policy_repo = PolicyRepoFactory(
