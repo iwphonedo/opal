@@ -5,9 +5,11 @@ import platform
 import re
 import subprocess
 import sys
+import threading
 import time
 
 import aiohttp
+import debugpy
 import requests
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -507,3 +509,50 @@ sys.excepthook = global_exception_handler
 
 def str2bool(val: str) -> bool:
     return str(val).lower() in ("true", "1", "yes")
+
+
+def pre_set():
+    # wait some seconds for the debugger to attach
+    debugger_wait_time = 5  # seconds
+
+
+    def cancel_wait_for_client_after_timeout():
+        try:
+            time.sleep(debugger_wait_time)
+            debugpy.wait_for_client.cancel()
+        except Exception as e:
+            logger.debug(f"Failed to cancel wait for client: {e}")
+
+
+    try:
+        if pytest_settings.wait_for_debugger:
+            t = threading.Thread(target=cancel_wait_for_client_after_timeout)
+            t.start()
+            logger.debug(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
+            debugpy.wait_for_client()
+    except Exception as e:
+        logger.debug(f"Failed to attach debugger: {e}")
+
+    export_env("OPAL_TESTS_DEBUG", "true")
+    # utils.install_opal_server_and_client()
+
+
+
+def wait_sometime():
+    """Pauses execution based on the environment.
+
+    If the code is running inside GitHub Actions, it pauses execution
+    for 30 seconds. Otherwise, it waits for user input to continue.
+
+    This can be used to control the flow of execution depending on the
+    environment in which the code is being executed.
+    """
+
+    if os.getenv("GITHUB_ACTIONS") == "true":
+        logger.info("Running inside GitHub Actions. Sleeping for 30 seconds...")
+        for secconds_ellapsed in range(30):
+            time.sleep(1)
+            print(f"Sleeping for \033[91m{29 - secconds_ellapsed}\033[0m seconds... \r",end="\r" if secconds_ellapsed < 29 else "\n")
+    else:
+        logger.info("Running on the local machine. Press Enter to continue...")
+        input()  # Wait for key press

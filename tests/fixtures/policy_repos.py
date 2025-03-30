@@ -162,7 +162,7 @@ def policy_repo_settings(temp_dir: str, session_matrix, opal_network, policy_rep
     yield (map[policy_repo_type](temp_dir, session_matrix), gitea_server_settings)
 
 @pytest.fixture(scope="session")
-def policy_repo(temp_dir: str, session_matrix, opal_network, request) -> GithubPolicyRepo | GiteaPolicyRepo:
+def policy_repo(temp_dir: str, session_matrix, opal_network, request):
     """Creates a policy repository for testing.
 
     This fixture creates a policy repository based on the configuration
@@ -179,13 +179,6 @@ def policy_repo(temp_dir: str, session_matrix, opal_network, request) -> GithubP
     :param request: The pytest request object.
     :return: The PolicyRepoBase object.
     """
-
-    logger.info("Creating policy repo...")
-    logger.info("\n\nusing session matrix:")
-    for key in session_matrix:
-        logger.info(f"{key}: {session_matrix[key]}")
-    logger.info("\n\n")
-
 
     settings, server = next(policy_repo_settings(temp_dir, session_matrix, opal_network, session_matrix["repo_provider"]))
     
