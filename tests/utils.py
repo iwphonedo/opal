@@ -142,7 +142,7 @@ def generate_ssh_key_pair():
     )
 
     # Return the keys as strings
-    return private_key_pem.decode("utf-8"), public_key_openssh.decode("utf-8")
+    return {"private": private_key_pem.decode("utf-8"), "public": public_key_openssh.decode("utf-8")}
 
 
 async def opal_authorize(user: str, policy_url: str):
@@ -504,3 +504,6 @@ def global_exception_handler(exc_type, exc_value, exc_traceback):
 
 # Set the global exception handler
 sys.excepthook = global_exception_handler
+
+def str2bool(val: str) -> bool:
+    return str(val).lower() in ("true", "1", "yes")

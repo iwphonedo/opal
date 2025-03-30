@@ -10,32 +10,14 @@ import debugpy
 import pytest
 from testcontainers.core.network import Network
 from testcontainers.core.utils import setup_logger
-from testcontainers.core.waiting_utils import wait_for_logs
 
-import docker
 from tests import utils
 from tests.containers.broadcast_container_base import BroadcastContainerBase
-from tests.containers.cedar_container import CedarContainer
-from tests.containers.gitea_container import GiteaContainer
-from tests.containers.kafka_broadcast_container import KafkaBroadcastContainer
-from tests.containers.opa_container import OpaContainer, OpaSettings
 from tests.containers.opal_client_container import OpalClientContainer
 from tests.containers.opal_server_container import OpalServerContainer
-from tests.containers.postgres_broadcast_container import PostgresBroadcastContainer
-from tests.containers.redis_broadcast_container import RedisBroadcastContainer
-from tests.containers.settings.cedar_settings import CedarSettings
-from tests.containers.settings.gitea_settings import GiteaSettings
 from tests.containers.settings.opal_client_settings import OpalClientSettings
 from tests.containers.settings.opal_server_settings import OpalServerSettings
-from tests.containers.settings.postgres_broadcast_settings import (
-    PostgresBroadcastSettings,
-)
 from tests.policy_repos.policy_repo_base import PolicyRepoBase
-from tests.policy_repos.policy_repo_factory import (
-    PolicyRepoFactory,
-    SupportedPolicyRepo,
-)
-from tests.policy_repos.policy_repo_settings import PolicyRepoSettings
 from tests.settings import pytest_settings
 
 logger = setup_logger(__name__)
@@ -49,20 +31,20 @@ def cancel_wait_for_client_after_timeout():
         time.sleep(debugger_wait_time)
         debugpy.wait_for_client.cancel()
     except Exception as e:
-        print(f"Failed to cancel wait for client: {e}")
+        logger.debug(f"Failed to cancel wait for client: {e}")
 
 
 try:
     if pytest_settings.wait_for_debugger:
         t = threading.Thread(target=cancel_wait_for_client_after_timeout)
         t.start()
-        print(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
+        logger.debug(f"Waiting for debugger to attach... {debugger_wait_time} seconds timeout")
         debugpy.wait_for_client()
 except Exception as e:
-    print(f"Failed to attach debugger: {e}")
+    logger.debug(f"Failed to attach debugger: {e}")
 
 utils.export_env("OPAL_TESTS_DEBUG", "true")
-utils.install_opal_server_and_client()
+# utils.install_opal_server_and_client()
 
 
 @pytest.fixture(scope="session")
@@ -77,16 +59,24 @@ def temp_dir():
     This fixture is useful for tests that need a temporary directory to
     exist for the duration of the test session.
     """
-    dir_path = tempfile.mkdtemp()
-    print(f"Temporary directory created: {dir_path}")
+    from pathlib import Path
+
+    path = Path("~/opal.tmp").expanduser()
+    path.mkdir(parents=True, exist_ok=True)
+    os.chmod(path, 0o777)  # Set permissions to allow read/write/execute for all users
+
+    dir_path = tempfile.mkdtemp(prefix="opal_tests_",suffix=".tmp",dir=str(path))
+    os.chmod(dir_path, 0o777)  # Set permissions to allow read/write/execute for all users
+    logger.debug(f"Temporary directory created: {dir_path}")
     yield dir_path
 
     # Teardown: Clean up the temporary directory
     shutil.rmtree(dir_path)
-    print(f"Temporary directory removed: {dir_path}")
+    shutil.rmtree(path)
+    logger.debug(f"Temporary directory removed: {dir_path}")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def opal_network():
     """Creates a Docker network and yields it.
 
@@ -96,25 +86,16 @@ def opal_network():
 
     yield network
 
-    print("Removing network...")
-    time.sleep(5)  # wait for the containers to stop
-    network.remove()
-    print("Network removed")
-
-
-@pytest.fixture(scope="session")
-def number_of_opal_servers():
-    """The number of OPAL servers to start.
-
-    This fixture is used to determine how many OPAL servers to start for
-    the tests. The default value is 2, but it can be overridden by setting
-    the environment variable OPAL_TESTS_NUMBER_OF_OPAL_SERVERS.
-
-    Returns:
-        int: The number of OPAL servers to start.
-    """
-    return 2
-
+    logger.info("Removing network...")
+    time.sleep(3)  # wait for the containers to stop
+    try:
+        network.remove()
+        logger.info("Network removed.")
+    except Exception as e:
+        if logger.level == "DEBUG":
+            logger.error(f"Failed to remove network: {e}")
+        else:
+            logger.error(f"Failed to remove network got exception\n{e}")
 
 from tests.fixtures.broadcasters import (
     broadcast_channel,
@@ -123,18 +104,16 @@ from tests.fixtures.broadcasters import (
     redis_broadcast_channel,
 )
 from tests.fixtures.images import opal_server_image
-from tests.fixtures.policy_repos import gitea_server, gitea_settings, policy_repo
+from tests.fixtures.policy_repos import policy_repo
 
 
 @pytest.fixture(scope="session")
 def opal_servers(
     opal_network: Network,
-    broadcast_channel: BroadcastContainerBase,
-    policy_repo: PolicyRepoBase,
-    number_of_opal_servers: int,
+    policy_repo,
     opal_server_image: str,
-    topics: dict[str, int],
-    # kafka_broadcast_channel: KafkaBroadcastContainer,
+    broadcast_channel: BroadcastContainerBase,
+    # kafka_broadcast_channel: KafkaContainer,
     # redis_broadcast_channel: RedisBroadcastContainer,
     session_matrix,
 ):
@@ -162,25 +141,33 @@ def opal_servers(
         List[OpalServerContainer]: A list of running OPAL server containers.
     """
 
+    # broadcast_channel = redis_broadcast_channel
+    # broadcast_channel = kafka_broadcast_channel
+    broadcast_channel = broadcast_channel[0]
+
     if not broadcast_channel:
         raise ValueError("Missing 'broadcast_channel' container.")
 
     containers = []  # List to store container instances
 
-    for i in range(number_of_opal_servers):
+
+    for i in range(session_matrix["number_of_opal_servers"]):
         container_name = f"opal_server_{i+1}"
 
+        repo_url = policy_repo.get_repo_url()
         container = OpalServerContainer(
             OpalServerSettings(
                 broadcast_uri=broadcast_channel.get_url(),
                 container_name=container_name,
                 container_index=i + 1,
                 uvicorn_workers="4",
-                policy_repo_url=policy_repo.get_repo_url(),
+                policy_repo_url=repo_url,
                 image=opal_server_image,
                 log_level="DEBUG",
-                data_topics=" ".join(topics.keys()),
+                data_topics=" ".join(session_matrix["topics"].keys()),
                 polling_interval=3,
+                policy_repo_main_branch=policy_repo.test_branch,
+                POLICY_REPO_SSH_KEY=session_matrix["opal_policy_repo_ssh_key_private"],
             ),
             network=opal_network,
         )
@@ -190,12 +177,13 @@ def opal_servers(
 
         if i == 0:
             # Only the first server should setup the webhook
-            policy_repo.setup_webhook(
-                container.get_container_host_ip(), container.settings.port
-            )
-            policy_repo.create_webhook()
+            # policy_repo.setup_webhook(
+            #     container.get_container_host_ip(), container.settings.port
+            # )
+            # policy_repo.create_webhook()
+            pass
 
-        print(
+        logger.info(
             f"Started container: {container_name}, ID: {container.get_wrapped_container().id}"
         )
         container.wait_for_log("Clone succeeded", timeout=30)
@@ -205,18 +193,6 @@ def opal_servers(
 
     for container in containers:
         container.stop()
-
-
-@pytest.fixture(scope="session")
-def number_of_opal_clients():
-    """The number of OPAL clients to start.
-
-    This fixture is used to determine how many OPAL clients to start for
-    the tests. The default value is 2, but it can be overridden by
-    setting the environment variable OPAL_TESTS_NUMBER_OF_OPAL_CLIENTS.
-    """
-    return 2
-
 
 @pytest.fixture(scope="session")
 def connected_clients(opal_clients: List[OpalClientContainer]):
@@ -261,7 +237,7 @@ def opal_clients(
     # opa_server: OpaContainer,
     # cedar_server: CedarContainer,
     request,
-    number_of_opal_clients: int,
+    session_matrix,
     opal_client_with_opa_image,
 ):
     """A fixture that starts and manages multiple OPAL client containers.
@@ -296,11 +272,11 @@ def opal_clients(
     if not opal_servers or len(opal_servers) == 0:
         raise ValueError("Missing 'opal_server' container.")
 
-    opal_server_url = f"http://{opal_servers[0].settings.container_name}:{opal_servers[0].settings.port}"
+    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"#{opal_servers[0].settings.port}"
 
     containers = []  # List to store OpalClientContainer instances
 
-    for i in range(number_of_opal_clients):
+    for i in range(session_matrix["number_of_opal_clients"]):
         container_name = f"opal_client_{i+1}"  # Unique name for each client
 
         client_token = opal_servers[0].obtain_OPAL_tokens(container_name)["client"]
@@ -330,12 +306,15 @@ def opal_clients(
                 opal_server_url=opal_server_url,
                 client_token=client_token,
                 default_update_callbacks=callbacks,
+                # inline_opa_enabled=False,
+                # policy_store_url=f"http://localhost:8181",#{opa_server.settings.port}",
+                # opa_port=opa_server.settings.port,
             ),
             network=opal_network,
         )
 
         container.start()
-        print(
+        logger.info(
             f"Started OpalClientContainer: {container_name}, ID: {container.get_wrapped_container().id}"
         )
         containers.append(container)
@@ -349,26 +328,8 @@ def opal_clients(
         logger.error(f"Failed to stop containers: {container}")
         pass
 
-
 @pytest.fixture(scope="session")
-def topics():
-    """A fixture that returns a dictionary mapping topic names to the number of
-    OpalClientContainer instances that should subscribe to each topic.
-
-    Returns
-    -------
-    dict
-        A dictionary mapping topic names to the number of OpalClientContainer
-        instances that should subscribe to each topic.
-    """
-    topics = {"topic_1": 1, "topic_2": 1}
-    return topics
-
-
-@pytest.fixture(scope="session")
-def topiced_clients(
-    topics, opal_network: Network, opal_servers: list[OpalServerContainer]
-):
+def topiced_clients(opal_network: Network, opal_servers: list[OpalServerContainer], session_matrix):
     """Fixture that starts and manages multiple OPAL client containers, each
     subscribing to a different topic.
 
@@ -397,7 +358,7 @@ def topiced_clients(
     if not opal_servers or len(opal_servers) == 0:
         raise ValueError("Missing 'opal_server' container.")
 
-    opal_server_url = f"http://{opal_servers[0].settings.container_name}:{opal_servers[0].settings.port}"
+    opal_server_url = f"http://{opal_servers[0].settings.container_name}:7002"#{opal_servers[0].settings.port}"
     containers = {}  # List to store OpalClientContainer instances
 
     client_token = opal_servers[0].obtain_OPAL_tokens("topiced_opal_client_?x?")[
@@ -421,7 +382,7 @@ def topiced_clients(
         }
     )
 
-    for topic, number_of_clients in topics.items():
+    for topic, number_of_clients in session_matrix["topics"].items():
         for i in range(number_of_clients):
             container_name = f"opal_client_{topic}_{i+1}"  # Unique name for each client
 
@@ -468,15 +429,17 @@ def wait_sometime():
     """
 
     if os.getenv("GITHUB_ACTIONS") == "true":
-        print("Running inside GitHub Actions. Sleeping for 30 seconds...")
-        time.sleep(3600)  # Sleep for 30 seconds
+        logger.info("Running inside GitHub Actions. Sleeping for 30 seconds...")
+        for secconds_ellapsed in range(30):
+            time.sleep(1)
+            print(f"Sleeping for \033[91m{29 - secconds_ellapsed}\033[0m seconds... \r",end="\r" if secconds_ellapsed < 29 else "\n")
     else:
-        print("Running on the local machine. Press Enter to continue...")
+        logger.info("Running on the local machine. Press Enter to continue...")
         input()  # Wait for key press
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup(opal_clients, session_matrix):
+def setup(opal_clients, policy_repo, session_matrix):
     """A setup fixture that is run once per test session.
 
     This fixture is automatically used by all tests, and is used to set up the
@@ -497,8 +460,15 @@ def setup(opal_clients, session_matrix):
     ------
     None
     """
-    yield
+    
 
+    logger.info("Initializing test session...")
+
+    for key, val in session_matrix.items():
+        logger.info(f"{key}: {val}")
+
+    yield
+    policy_repo.cleanup()
     if session_matrix["is_final"]:
         logger.info("Finalizing test session...")
         utils.remove_env("OPAL_TESTS_DEBUG")

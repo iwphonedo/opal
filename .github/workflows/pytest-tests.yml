@@ -1,0 +1,43 @@
+name: Pytest Tests
+
+env:
+  OPAL_PYTEST_REPO_OWNER: ${{vars.OPAL_PYTEST_REPO_OWNER}}
+  OPAL_PYTEST_REPO_NAME: ${{vars.OPAL_PYTEST_REPO_NAME}}
+  OPAL_PYTEST_REPO_PASSWORD: ${{vars.OPAL_PYTEST_REPO_PASSWORD}}
+  OPAL_PYTEST_SSH_KEY_PATH: ${{vars.OPAL_PYTEST_SSH_KEY_PATH}}
+  OPAL_PYTEST_SOURCE_ACCOUNT: ${{vars.OPAL_PYTEST_SOURCE_ACCOUNT}}
+  OPAL_PYTEST_SOURCE_REPO: ${{vars.OPAL_PYTEST_SOURCE_REPO}}
+  OPAL_PYTEST_WEBHOOK_SECRET: ${{vars.OPAL_PYTEST_WEBHOOK_SECRET}}
+  OPAL_PYTEST_SHOULD_FORK: ${{vars.OPAL_PYTEST_SHOULD_FORK}}
+  OPAL_PYTEST_USE_WEBHOOK: ${{vars.OPAL_PYTEST_USE_WEBHOOK}}
+  OPAL_PYTEST_WAIT_FOR_DEBUGGER: ${{vars.OPAL_PYTEST_WAIT_FOR_DEBUGGER}}
+  OPAL_PYTEST_DO_NOT_BUILD_IMAGES: ${{vars.OPAL_PYTEST_DO_NOT_BUILD_IMAGES}}
+  OPAL_PYTEST_SKIP_REBUILD_IMAGES: ${{vars.OPAL_PYTEST_SKIP_REBUILD_IMAGES}}
+  OPAL_PYTEST_KEEP_IMAGES: ${{vars.OPAL_PYTEST_KEEP_IMAGES}}
+  OPAL_PYTEST_GITHUB_PAT: ${{vars.OPAL_PYTEST_GITHUB_PAT}}
+  OPAL_PYTEST_POLICY_REPO_SSH_PRIVATE_KEY: ${{vars.OPAL_PYTEST_POLICY_REPO_SSH_PRIVATE_KEY}}
+  OPAL_PYTEST_POLICY_REPO_SSH_PUBLIC_KEY: ${{vars.OPAL_PYTEST_POLICY_REPO_SSH_PUBLIC_KEY}}
+  OPAL_AUTH_PRIVATE_KEY: ${{vars.OPAL_AUTH_PRIVATE_KEY}}
+  OPAL_AUTH_PUBLIC_KEY: ${{vars.OPAL_AUTH_PUBLIC_KEY}}
+
+on:
+  push:
+    branches:
+      - e2e-add-kafka-fix
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: OPAL_pytest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt && pip install -r ./tests/requirements.txt
+      - name: Run tests
+        working-directory: ./tests
+        run: ./run.sh
+
