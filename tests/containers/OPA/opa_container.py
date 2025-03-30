@@ -2,31 +2,8 @@ from testcontainers.core.generic import DockerContainer
 from testcontainers.core.network import Network
 from testcontainers.core.utils import setup_logger
 
-from tests import utils
+from tests.containers.OPA.OPA_settings import OpaSettings
 from tests.containers.permitContainer import PermitContainer
-from tests.containers.settings.opal_client_settings import OpalClientSettings
-
-
-class OpaSettings:
-    def __init__(
-        self,
-        image: str | None = None,
-        port: int | None = None,
-        container_name: str | None = None,
-    ) -> None:
-        self.image = image if image else "openpolicyagent/opa:0.29.0"
-        self.container_name = "opa"
-
-        if port is None:
-            self.port = utils.find_available_port(8181)
-        else:
-            if utils.is_port_available(port):
-                self.port = port
-            else:
-                self.port = utils.find_available_port(8181)
-
-    def getEnvVars(self):
-        return {}
 
 
 class OpaContainer(PermitContainer, DockerContainer):
@@ -43,20 +20,19 @@ class OpaContainer(PermitContainer, DockerContainer):
         )
         self.settings = settings
         self.network = network
-        self.logger = setup_logger(__name__)
         self.configure()
+        self.start()
 
     def configure(self):
         for key, value in self.settings.getEnvVars().items():
             self.with_env(key, value)
 
-        self.with_name(self.settings.container_name).with_bind_ports(
-            8181, self.settings.port
-        ).with_network(self.network).with_kwargs(
-            labels={"com.docker.compose.project": "pytest"}
-        ).with_network_aliases(
-            self.settings.container_name
-        )
+        self.with_name(self.settings.container_name)
+        self.with_bind_ports(8181, self.settings.port)
+        self.with_network(self.network)
+        self.with_kwargs(labels={"com.docker.compose.project": "pytest"})
+        self.with_network_aliases(self.settings.container_name)
+        self.with_command("run --log-level debug --server --addr :8181")
 
     def reload_with_settings(self, settings: OpaSettings | None = None):
         self.stop()

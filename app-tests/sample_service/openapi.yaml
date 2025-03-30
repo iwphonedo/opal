@@ -37,7 +37,7 @@ paths:
     get:
       summary: Endpoint C with Authorization
       description: |
-        This endpoint requires authorization. The client must provide a JWT token in the Authorization header. 
+        This endpoint requires authorization. The client must provide a JWT token in the Authorization header.
         The endpoint checks with an OPAL server to authorize the user based on the token.
       security:
         - bearerAuth: []

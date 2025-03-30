@@ -40,18 +40,26 @@ class PermitContainer:
             # Check if the timeout has been exceeded
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
-                self.permitLogger.warning(f"{self.settings.container_name} | Timeout reached while waiting for the log. | {log_str}")
+                self.permitLogger.warning(
+                    f"{self.settings.container_name} | Timeout reached while waiting for the log. | {log_str}"
+                )
                 break
 
             decoded_line = line.decode("utf-8").strip()
 
             # Search for the timestamp in the line
             match = re.search(self.timestamp_with_ansi, decoded_line)
+            if reference_timestamp is None:
+                if log_str in decoded_line:
+                    log_found = True
+                    break
+
             if match:
-                log_timestamp_string = match.group(1)
-                log_timestamp = datetime.strptime(
-                    log_timestamp_string, "%Y-%m-%dT%H:%M:%S.%f%z"
-                )
+                if reference_timestamp is not None:
+                    log_timestamp_string = match.group(1)
+                    log_timestamp = datetime.strptime(
+                        log_timestamp_string, "%Y-%m-%dT%H:%M:%S.%f%z"
+                    )
 
                 if (reference_timestamp is None) or (
                     log_timestamp > reference_timestamp
@@ -122,9 +130,7 @@ class PermitContainer:
             self.permitLogger.info(f"Checking log line: {decoded_line}")
             self.permitLogger.info(f"scanning line: {decoded_line}")
             if log_str in decoded_line:
-                self.permitLogger.error("\n\n\n\n")
                 self.permitLogger.error(f"error found: {decoded_line}")
-                self.permitLogger.error("\n\n\n\n")
                 self.errors.append(decoded_line)
 
     def __del__(self):

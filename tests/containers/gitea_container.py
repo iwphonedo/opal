@@ -104,7 +104,7 @@ class GiteaContainer(PermitContainer, DockerContainer):
     def deploy_gitea(self):
         """Deploy Gitea container and initialize configuration."""
         self.logger.info("Deploying Gitea container...")
-        # self.start()
+        self.start()
         self.wait_for_gitea()
         self.create_gitea_user()
         self.access_token = self.create_gitea_admin_token()
@@ -353,7 +353,7 @@ class GiteaContainer(PermitContainer, DockerContainer):
         # Commit the changes if there are modifications
         if repo.is_dirty():
             print(f"Committing changes for branch {branch}...")
-            repo.index.commit(COMMIT_MESSAGE)
+            repo.git.commit(COMMIT_MESSAGE)
 
         # Push changes to the remote repository
         print(f"Pushing changes for branch {branch}...")

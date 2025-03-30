@@ -33,6 +33,10 @@ def opa_image(session_matrix):
 
     This fixture is used to provide a working OPA image for the tests.
     """
+    image_name = "openpolicyagent/opa"
+    yield image_name
+    return
+
     image_name = "opa"
 
     yield from utils.build_docker_image("Dockerfile.opa", image_name, session_matrix)

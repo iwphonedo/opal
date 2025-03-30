@@ -2,6 +2,7 @@ from testcontainers.core.container import DockerContainer
 from testcontainers.core.network import Network
 from testcontainers.redis import RedisContainer
 
+from tests import utils
 from tests.containers.permitContainer import PermitContainer
 
 
@@ -13,15 +14,10 @@ class RedisUIContainer(PermitContainer, DockerContainer):
         docker_client_kw: dict | None = None,
         **kwargs,
     ) -> None:
-        # Add custom labels to the kwargs
-        labels = kwargs.get("labels", {})
-        labels.update({"com.docker.compose.project": "pytest"})
-        kwargs["labels"] = labels
-
         self.redis_container = redis_container
         self.network = network
-        self.container_name = "redis-ui"
-        self.image = "redislabs/redisinsight:latest"
+        self.container_name = f"{self.redis_container.settings.container_name}-ui"
+        self.image = "redis/redisinsight:latest"
 
         PermitContainer.__init__(self)
         DockerContainer.__init__(
@@ -31,6 +27,8 @@ class RedisUIContainer(PermitContainer, DockerContainer):
         self.with_name(self.container_name)
 
         self.with_network(self.network)
-        self.with_bind_ports(5540, 5540)
+        self.with_bind_ports(5540, utils.find_available_port(5540))
 
         self.with_network_aliases("redis_ui")
+
+        self.start()

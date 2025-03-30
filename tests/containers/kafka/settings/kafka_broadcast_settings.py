@@ -1,45 +1,66 @@
 import os
+
 from testcontainers.core.utils import setup_logger
 
-class KafkaBroadcastSettings:
-    def __init__(self, host, port, user, password, database):
 
+class KafkaBroadcastSettings:
+    def __init__(self, kafka_port: int | None = None):
         self.logger = setup_logger("KafkaBroadcastSettings")
 
-        self.host = host
-        self.port = port
-        self.user = user
-        self.password = password
-        self.database = database
+        self.load_from_env()
+
+        self.kafka_port = kafka_port if kafka_port else self.kafka_port
+
+        self.protocol = "kafka"
 
         self.validate_dependencies()
 
     def validate_dependencies(self):
         """Validate required dependencies before starting the server."""
-        if not self.host:
-            raise ValueError("POSTGRES_HOST is required.")
-        if not self.port:
+        if not self.kafka_port:
             raise ValueError("POSTGRES_PORT is required.")
-        if not self.user:
-            raise ValueError("POSTGRES_USER is required.")
-        if not self.password:
-            raise ValueError("POSTGRES_PASSWORD is required.")
-        if not self.database:
-            raise ValueError("POSTGRES_DATABASE is required.")
-        
-        self.logger.info(f"{self.kafka_container_name} | Dependencies validated successfully.")
+        self.logger.info(
+            f"{self.kafka_container_name} | Dependencies validated successfully."
+        )
 
+    def getKafkaUiEnvVars(self):
+        return {"KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS": "kafka:9092"}
 
-    def getEnvVars(self):
+    def getZookiperEnvVars(self):
         return {
-            "POSTGRES_HOST": self.host,
-            "POSTGRES_PORT": self.port,
-            "POSTGRES_USER": self.user,
-            "POSTGRES_PASSWORD": self.password,
-            "POSTGRES_DATABASE": self.database,
+            "ZOOKEEPER_CLIENT_PORT": self.zookeeper_port,
+            "ZOOKEEPER_TICK_TIME": self.zookeeper_tick_time,
+            "ALLOW_ANONYMOUS_LOGIN": self.zookeeper_allow_anonymous_login,
         }
 
+    def getKafkaEnvVars(self):
+        return {}
+
     def load_from_env(self):
+        """Load Kafka settings from environment variables.
+
+        The following environment variables are supported:
+        - KAFKA_IMAGE_NAME
+        - KAFKA_CONTAINER_NAME
+        - KAFKA_CLIENT_PORT
+        - KAFKA_ADMIN_PORT
+        - KAFKA_UI_IMAGE_NAME
+        - KAFKA_UI_CONTAINER_NAME
+        - KAFKA_UI_PORT
+        - KAFKA_UI_URL
+        - KAFKA_BROKER_ID
+        - KAFKA_ZOOKEEPER_CONNECT
+        - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+        - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+        - KAFKA_ADVERTISED_LISTENERS
+        - ALLOW_PLAINTEXT_LISTENER
+        - KAFKA_TOPIC_AUTO_CREATE
+        - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+        - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+        - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+
+        If an environment variable is not set, a default value is used.
+        """
         self.host = os.getenv("POSTGRES_HOST", "localhost")
         self.port = int(os.getenv("POSTGRES_PORT", 5432))
         self.user = os.getenv("POSTGRES_USER", "postgres")
@@ -70,9 +91,9 @@ class KafkaBroadcastSettings:
 
         self.kafka_ui_port = os.getenv("KAFKA_UI_PORT", 8080)
 
-        self.kafka_ui_url = os.getenv(
-            "KAFKA_UI_URL", f"http://{self.kafka_ui_host}:{self.kafka_ui_port}"
-        )
+        # self.kafka_ui_url = os.getenv(
+        #     "KAFKA_UI_URL", f"http://{self.kafka_ui_host}:{self.kafka_ui_port}"
+        # )
 
         self.broker_id = os.getenv("KAFKA_BROKER_ID", 1)
         self.zookeeper_connect = os.getenv(
