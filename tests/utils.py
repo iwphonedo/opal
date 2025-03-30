@@ -504,3 +504,6 @@ def global_exception_handler(exc_type, exc_value, exc_traceback):
 
 # Set the global exception handler
 sys.excepthook = global_exception_handler
+
+def str2bool(val: str) -> bool:
+    return str(val).lower() in ("true", "1", "yes")
